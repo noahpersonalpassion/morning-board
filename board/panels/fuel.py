@@ -60,6 +60,7 @@ class FuelPanel:
             )
 
         when, value = latest
+        previous = _previous_week(rows, when)
         age = (datetime.now(timezone.utc).date() - when).days
 
         if age > STALE_AFTER_DAYS:
@@ -76,17 +77,57 @@ class FuelPanel:
                 meta={"age_days": age, "last_value": value},
             )
 
+        # A price with no direction is half a fact: 320 means nothing unless
+        # you know whether it is climbing. The CSV already carries the
+        # history, so the comparison costs one more pass over rows we read
+        # anyway.
+        note = (
+            f"National average board price, week ending "
+            f"{when.strftime('%-d %B')}."
+        )
+        move = None
+        if previous is not None:
+            move = value - previous
+            if abs(move) < 0.5:
+                note += " Unchanged on the week."
+            else:
+                note += (
+                    f" {'Up' if move > 0 else 'Down'} {abs(move):.0f}c "
+                    f"on the week."
+                )
+
         return PanelResult(
             state=State.LIVE,
             reading=f"{value:.0f}",
             unit="c/L regular",
-            note=(
-                f"National average board price, week ending "
-                f"{when.strftime('%-d %B')}."
-            ),
+            note=note,
             as_of=when.isoformat(),
-            meta={"age_days": age},
+            meta={"age_days": age, "week_change": move},
         )
+
+
+def _previous_week(rows: list[dict], latest: date) -> float | None:
+    """The most recent matching value from BEFORE the latest week.
+
+    Deliberately "the previous published week" rather than "seven days ago":
+    MBIE has skipped weeks, and subtracting from a gap would invent a change
+    that did not happen.
+    """
+    best: tuple[date, float] | None = None
+    for row in rows:
+        low = {(k or "").strip().lower(): (v or "").strip()
+               for k, v in row.items()}
+        if (WANTED_VARIABLE not in low.get("variable", "").lower()
+                or WANTED_FUEL not in low.get("fuel", "").lower()):
+            continue
+        try:
+            when = date.fromisoformat(low.get("date", "")[:10])
+            value = float(low.get("value", ""))
+        except (ValueError, TypeError):
+            continue
+        if when < latest and (best is None or when > best[0]):
+            best = (when, value)
+    return best[1] if best else None
 
 
 def _latest_matching(rows: list[dict]) -> tuple[date, float] | None:

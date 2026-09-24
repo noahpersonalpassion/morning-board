@@ -14,6 +14,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from .panels.base import PanelResult, State
+from .whatsnew import SCRIPT as WHATSNEW_SCRIPT, STYLE as WHATSNEW_STYLE, state_blob
 
 TEMPLATE = Path(__file__).resolve().parent / "templates" / "page.html"
 
@@ -45,7 +46,7 @@ def _row(label: str, r: PanelResult) -> str:
             if r.note or link else "")
 
     return (
-        f'<li class="row" data-state="{r.state.value}">'
+        f'<li class="row" data-state="{r.state.value}" data-label="{html.escape(label, quote=True)}">'
         f'<span class="mark" aria-hidden="true"></span>'
         f'<div class="label">{_esc(label)}</div>'
         f'<div class="read">{r.reading}{unit}{flag}</div>'
@@ -73,6 +74,39 @@ def _country(r: PanelResult) -> str:
     return f'<ol class="country">{"".join(out)}</ol>'
 
 
+def _off_summary(off: list[tuple[str, PanelResult]]) -> str:
+    """Every unbuilt row folded into one line.
+
+    Three full rows reading "Not connected" was a third of the page saying
+    nothing, and it made a working board look like a prototype. Collapsing
+    them keeps the honesty — they are still listed, still named, still say
+    what each one needs — while giving the page back to the rows that have
+    something to report. Hiding them entirely would have been the dishonest
+    fix: an absent row and a row with nothing to say look identical.
+    """
+    if not off:
+        return ""
+    names = ", ".join(label for label, _ in off)
+    needs = "; ".join(
+        f"{label} {_first_clause(r.note)}" for label, r in off if r.note
+    )
+    return (
+        '<li class="row" data-state="off">'
+        '<span class="mark" aria-hidden="true"></span>'
+        '<div class="label">Not yet</div>'
+        f'<div class="read">{len(off)} <span class="unit">'
+        f'{"row" if len(off) == 1 else "rows"}</span></div>'
+        f'<div class="note">{_esc(names)}. {_esc(needs)}.</div>'
+        '</li>'
+    )
+
+
+def _first_clause(note: str) -> str:
+    """"Needs a Gazette API key. Request one from..." -> "needs a Gazette API key"."""
+    first = note.split(".")[0].strip()
+    return first[0].lower() + first[1:] if first else ""
+
+
 def render_page(
     *,
     site_name: str,
@@ -85,7 +119,9 @@ def render_page(
 ) -> str:
     now = datetime.now(ZoneInfo(tz))
 
-    board = "".join(_row(label, r) for label, r in rows)
+    on = [(l, r) for l, r in rows if r.state is not State.OFF]
+    off = [(l, r) for l, r in rows if r.state is State.OFF]
+    board = "".join(_row(label, r) for label, r in on) + _off_summary(off)
 
     needs = [r for _, r in rows if r.needs_you]
     unread = [r for _, r in rows if r.state in (State.UNREAD, State.PAUSED)]
@@ -104,7 +140,7 @@ def render_page(
         bits.append("nothing has changed near your address")
     lede = ". ".join(b[0].upper() + b[1:] for b in bits if b) + "." if bits else ""
 
-    checked = len(rows)
+    checked = len(on)
     foot_line = (
         f"{len(needs)} thing{'s' if len(needs) != 1 else ''} needs you."
         if needs else "Nothing needs you today."
@@ -131,6 +167,9 @@ def render_page(
         .replace("<!--BUILT-->", now.strftime("%-d %b %H:%M"))
         .replace("<!--PWAHEAD-->", pwa_head)
         .replace("<!--PWAREG-->", pwa_register)
+        .replace("<!--WHATSNEWSTYLE-->", f"<style>{WHATSNEW_STYLE}</style>")
+        .replace("<!--BOARDSTATE-->", state_blob(on))
+        .replace("<!--WHATSNEW-->", WHATSNEW_SCRIPT)
     )
 
 

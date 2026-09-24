@@ -129,12 +129,16 @@
     letter-spacing:0.09em; text-transform:uppercase; color:var(--muted); margin-top:5px;
   }
   a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+<!--WHATSNEWSTYLE-->
 
   @media (max-width:400px) {
     .row { grid-template-columns:9px 1fr; }
     .label { grid-row:1; grid-column:2; align-self:baseline; }
     .read, .note, .week { grid-column:2; }
-    .mark { grid-row:1 / span 4; }
+    /* Beside the label, not floating alongside the chart: at this width
+       the mark spanning every row parked it next to the weather graphic,
+       where it read as part of the chart rather than the row's state. */
+    .mark { grid-row:1; align-self:center; }
   }
 </style>
 </head>
@@ -146,7 +150,7 @@
       <h1><!--TITLE--></h1>
       <span class="place"><!--STAMP--></span>
     </div>
-    <p class="state"><!--LEDE--></p>
+    <p class="state"><!--LEDE--> <span class="since" id="since"></span></p>
   </header>
 
   <section class="zone">
@@ -178,6 +182,8 @@
   </footer>
 
 </div>
+<!--BOARDSTATE-->
+<!--WHATSNEW-->
 <!--PWAREG-->
 </body>
 </html>

@@ -27,6 +27,7 @@ from board import config
 from board.news import NEWS_FEEDS
 from board.panels.base import State, render_all, safe_render
 from board.panels.country import CountryPanel
+from board.panels.daylight import DaylightPanel
 from board.panels.deadlines import DeadlinesPanel, default_deadlines
 from board.panels.fuel import FuelPanel
 from board.panels.near_you import NearYouPanel
@@ -64,6 +65,7 @@ def build_panels(site, profile, corpus):
 
     return [
         WeatherPanel(lat=site.lat, lon=site.lon),
+        DaylightPanel(lat=site.lat, lon=site.lon),
         DeadlinesPanel(deadlines=default_deadlines()),
         near,
         FuelPanel(),

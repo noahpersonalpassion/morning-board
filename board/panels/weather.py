@@ -67,18 +67,31 @@ class WeatherPanel:
         )
 
     def _summary(self, days) -> str:
-        wet = [(t, p) for t, _, _, p in days if (p or 0) >= RAIN_LABEL_THRESHOLD]
+        """The weather, in weather words.
+
+        The first sentence is lifted into the page's lede, so it has to say
+        something about the weather. An earlier version opened with "Bars run
+        low to high" — an instruction for reading the chart — and the top of
+        the board read "Bars run low to high. 1 deadline open," which is a
+        caption where a forecast should be. The chart labels every bar with
+        the high it reaches, so it needs no caption at all.
+
+        Naming every wet day is no better: four day names is a list to parse,
+        not a fact to absorb. Past two, the useful sentence is "most days".
+        """
+        wet = [_day_name(t) for t, _, _, p in days if (p or 0) >= RAIN_LABEL_THRESHOLD]
         lows = [lo for _, _, lo, _ in days]
+        tail = f"Overnight lows {min(lows):.0f} to {max(lows):.0f}\u00b0C."
+
         if not wet:
-            return (
-                f"Dry all week. Overnight lows {min(lows):.0f} to "
-                f"{max(lows):.0f}\u00b0C."
-            )
-        names = ", ".join(_day_name(t) for t, _ in wet)
-        return (
-            f"Bars run low to high. Rain likely on {names}. "
-            f"Overnight lows {min(lows):.0f} to {max(lows):.0f}\u00b0C."
-        )
+            return f"Dry all week. {tail}"
+        if len(wet) == 1:
+            return f"Rain on {wet[0]}. {tail}"
+        if len(wet) == 2:
+            return f"Rain on {wet[0]} and {wet[1]}. {tail}"
+        if len(wet) >= len(days) - 1:
+            return f"Rain almost every day. {tail}"
+        return f"Rain most days, from {wet[0]}. {tail}"
 
 
 def _day_name(iso: str) -> str:
