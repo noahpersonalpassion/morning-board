@@ -49,8 +49,9 @@ class TestOffCollapse(unittest.TestCase):
 
     def test_off_rows_collapse_to_one_row(self):
         html = _off_summary(self.rows(3))
-        self.assertEqual(html.count('<li class="row"'), 1)
-        self.assertIn(">3 <", html)
+        self.assertEqual(html.count("<li "), 1)
+        self.assertIn('data-state="off"', html)
+        self.assertIn(">3<", html)
 
     def test_collapsed_row_still_names_every_one(self):
         """Collapsing is a layout fix, not a way to hide an unbuilt row."""

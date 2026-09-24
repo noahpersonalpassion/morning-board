@@ -269,6 +269,7 @@ class AlertPanel:
         if not quakes and not vol_lines:
             return PanelResult(
                 state=State.QUIET,
+                icon="alert",
                 reading="Nothing",
                 note=(
                     "No earthquake near you and no change in volcanic alert "
@@ -281,6 +282,7 @@ class AlertPanel:
         head, effect, detail = self._say(quakes, vol_lines)
         return PanelResult(
             state=State.URGENT,
+            icon="alert",
             reading=head,
             effect=effect,
             note=detail,

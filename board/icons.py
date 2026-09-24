@@ -7,6 +7,9 @@ without installing anything.
 
 The mark is the board's own left margin: four rows in four states, each with
 a reading of a different length. It looks like the thing it opens.
+
+Not to be confused with `board/glyphs.py`, which holds the small inline SVG
+marks that sit inside the board's tiles. This file draws the app's PNG icon.
 """
 
 from __future__ import annotations

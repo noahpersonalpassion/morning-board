@@ -58,6 +58,7 @@ class NearYouPanel:
                 )
             return PanelResult(
                 state=State.QUIET,
+                icon="pin",
                 reading="Nothing",
                 note=note,
                 meta={"checked": len(candidates)},
@@ -66,6 +67,7 @@ class NearYouPanel:
         c, card = local[0]
         return PanelResult(
             state=State.LIVE,
+            icon="pin",
             reading=str(len(local)),
             unit="change" if len(local) == 1 else "changes",
             note=f"{card.effect} {card.why_you}",

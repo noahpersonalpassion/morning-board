@@ -48,6 +48,7 @@ class DeadlinesPanel:
         if not live:
             return PanelResult(
                 state=State.QUIET,
+                icon="clock",
                 reading="None open",
                 note=(
                     "Nothing is closing that you cannot reopen later. "
@@ -74,6 +75,7 @@ class DeadlinesPanel:
 
         return PanelResult(
             state=State.URGENT,
+            icon="clock",
             reading=str(len(live)),
             unit="open" if len(live) > 1 else "open",
             flag="cannot undo",

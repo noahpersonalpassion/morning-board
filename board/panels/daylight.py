@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from notice.feeds import FeedError, fetch
-from .base import Panel, PanelResult, State
+from .base import Panel, PanelResult, Scale, State
 
 API = (
     "https://api.open-meteo.com/v1/forecast"
@@ -37,6 +37,13 @@ UV_WORTH_SAYING = 6
 # Daylight is measured from here, not from midnight: five o'clock is when
 # the question "is there still light?" starts having a practical answer.
 AFTER_WORK_FROM = 17
+
+# Minutes of light after five at the summer solstice in Auckland, where
+# sunset reaches about 8:40pm. The top of the bar, so a September evening
+# reads as most of the way back rather than as a number with no context.
+# A reader further south will run slightly past full, which the scale
+# clamps — drawn wrong is better than drawn off the tile.
+EVENING_LIGHT_MAX = 220
 
 # Roughly minutes of unprotected exposure before a fair skin burns. NIWA's
 # public guidance rounds to these; they are indicative, not medical.
@@ -79,13 +86,25 @@ class DaylightPanel:
                        f"in about {burn} minutes.")
             flag, kind = f"uv {uv:.0f}", "warn" if uv < 8 else "alert"
 
+        # Where this evening sits between the solstices. A sunset time on
+        # its own is a fact you cannot place; against the year's own range
+        # it answers the thing people actually track in September, which is
+        # how far back toward summer we have got.
+        evening = max(0, (t_set.hour * 60 + t_set.minute)
+                      - AFTER_WORK_FROM * 60)
+
         return PanelResult(
             state=State.LIVE,
             reading=_clock(t_set),
             unit="sunset",
+            icon="sunset",
             flag=flag,
             flag_kind=kind,
             effect=effect,
+            scale=Scale(value=float(evening),
+                        low=0.0, high=float(EVENING_LIGHT_MAX),
+                        low_label="midwinter", mid_label="evening light",
+                        high_label="midsummer"),
             note=note,
             as_of=d["sunset"][1],
             meta={"sunrise": d["sunrise"][1], "sunset": d["sunset"][1],

@@ -35,6 +35,36 @@ class State(str, Enum):
 
 
 @dataclass
+class Scale:
+    """Where a reading sits inside its own range.
+
+    A number with no range is half a fact. "320c/L" answers *what* but not
+    *is that a lot*, and the reader has to carry twelve weeks of petrol
+    prices in their head to close the gap. The board already holds that
+    history, so it does the comparison instead.
+
+    `pct` is clamped: a value outside its band draws full or empty rather
+    than off the edge of the tile. A band that has been drawn wrong should
+    look wrong, not break the layout.
+    """
+
+    value: float
+    low: float
+    high: float
+    low_label: str = ""
+    high_label: str = ""
+    mid_label: str = ""
+    tone: str = "ok"            # ok | warn | alert
+
+    @property
+    def pct(self) -> float:
+        span = self.high - self.low
+        if span <= 0:
+            return 0.0
+        return max(0.0, min(1.0, (self.value - self.low) / span)) * 100.0
+
+
+@dataclass
 class PanelResult:
     state: State
     reading: str                 # the big text: "13.2°C", "Nothing", "1 open"
@@ -58,7 +88,28 @@ class PanelResult:
     # with no as-of is fine (a countdown); a stale one must never be shown
     # as current, so anything older than its own cadence downgrades itself.
     as_of: str = ""
+    # Which glyph names this tile. A key into board.icons, never markup: a
+    # panel should not be able to put arbitrary SVG on the page.
+    icon: str = ""
+    # The bar under the reading. None means this panel has no meaningful
+    # range — and no bar is drawn, rather than a flat one implying zero.
+    scale: "Scale | None" = None
     meta: dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def shape(self) -> str:
+        """Which compartment this gets: card, metric or strip.
+
+        Size is a claim. A grid of equal boxes says these things matter
+        equally, which is false the moment one of them is a deadline you
+        can permanently miss and another is a row with nothing to report.
+        So the shape follows the state rather than the layout's tidiness.
+        """
+        if self.state is State.URGENT:
+            return "card"
+        if self.state is State.LIVE:
+            return "metric"
+        return "strip"
 
     @property
     def needs_you(self) -> bool:

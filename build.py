@@ -26,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from board import config
 from board.news import NEWS_FEEDS
+from board.panels.air import AirPanel
 from board.panels.alerts import AlertPanel
 from board.panels.base import State, render_all, safe_render
 from board.panels.country import CountryPanel
@@ -60,20 +61,21 @@ def build_panels(site, profile, corpus):
         near.label = "Near you"
     else:
         near = _OffPanel(
-            "near_you", "Near you",
+            "near_you", "Near you", "pin",
             "Needs a Gazette API key. Request one from info@gazette.govt.nz, "
             "then set NOTICE_GAZETTE_API_KEY and NOTICE_GAZETTE_FEED_URL.",
         )
 
     return [
+        DeadlinesPanel(deadlines=default_deadlines()),
         WeatherPanel(lat=site.lat, lon=site.lon),
         DaylightPanel(lat=site.lat, lon=site.lon),
-        DeadlinesPanel(deadlines=default_deadlines()),
-        near,
         FuelPanel(),
-        _OffPanel("transport", "Transport",
+        AirPanel(lat=site.lat, lon=site.lon),
+        near,
+        _OffPanel("transport", "Transport", "bus",
                   "Disruptions on your line. Needs the Auckland Transport feed."),
-        _OffPanel("bins", "Bins",
+        _OffPanel("bins", "Bins", "bin",
                   "Rubbish and recycling day. Needs your council collection zone."),
     ]
 
@@ -119,13 +121,15 @@ class _OffPanel:
     to report look identical to a reader, and only one of them is true.
     """
 
-    def __init__(self, panel_id: str, label: str, note: str) -> None:
-        self.panel_id, self.label, self._note = panel_id, label, note
+    def __init__(self, panel_id: str, label: str, icon: str,
+                 note: str) -> None:
+        self.panel_id, self.label = panel_id, label
+        self._icon, self._note = icon, note
 
     def render(self):
         from board.panels.base import PanelResult, State
         return PanelResult(state=State.OFF, reading="Not connected",
-                           note=self._note)
+                           icon=self._icon, note=self._note)
 
 
 def main(argv: list[str] | None = None) -> int:

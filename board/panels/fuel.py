@@ -17,10 +17,10 @@ from __future__ import annotations
 import csv
 import io
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from notice.feeds import FeedError, fetch
-from .base import Panel, PanelResult, State
+from .base import Panel, PanelResult, Scale, State
 
 CSV_URL = (
     "https://www.mbie.govt.nz/assets/Data-Files/Energy/"
@@ -38,6 +38,10 @@ WANTED_FUEL = "regular petrol"
 # is only as honest as the assumption it rests on, and a reader with a Hilux
 # should be able to see the number to scale.
 TANK_LITRES = 50.0
+
+# How far back the scale bar looks. A quarter is long enough to hold a
+# real move and short enough that the band still describes now.
+BAND_WEEKS = 12
 
 
 @dataclass
@@ -108,16 +112,65 @@ class FuelPanel:
         else:
             effect += "."
 
+        low, high = _band(rows, when)
+
         return PanelResult(
             state=State.LIVE,
             reading=f"{value:.0f}",
             unit="c/L regular",
+            icon="fuel",
             effect=effect,
             note=note,
+            scale=Scale(
+                value=value, low=low, high=high,
+                low_label=f"{low:.0f} low",
+                mid_label=f"{BAND_WEEKS} weeks",
+                high_label=f"{high:.0f} high",
+                tone="alert" if high > low and (value - low) / (high - low) > 0.8
+                     else "ok",
+            ),
             as_of=when.isoformat(),
             meta={"age_days": age, "week_change": move,
-                  "tank_cost": round(tank, 2)},
+                  "tank_cost": round(tank, 2),
+                  "band_low": low, "band_high": high},
         )
+
+
+def _band(rows: list[dict], latest: date) -> tuple[float, float]:
+    """The lowest and highest board price over the recent window.
+
+    This is what turns 320 into information. Without it a reader has to
+    carry three months of petrol prices in their head to know whether the
+    number is high — and the CSV being read already contains every one of
+    them, so the comparison costs nothing but a second pass.
+
+    A degenerate band (one week of data, or a flat series) returns a range
+    around the value itself rather than a zero-width one, so the bar draws
+    at the middle instead of dividing by zero.
+    """
+    cutoff = latest - timedelta(weeks=BAND_WEEKS)
+    values = [v for d, v in _series(rows) if cutoff <= d <= latest]
+    if not values:
+        return 0.0, 1.0
+    low, high = min(values), max(values)
+    if high - low < 1.0:
+        return low - 1.0, high + 1.0
+    return low, high
+
+
+def _series(rows: list[dict]):
+    """Every (date, value) this panel cares about, parsed once."""
+    for row in rows:
+        low = {(k or "").strip().lower(): (v or "").strip()
+               for k, v in row.items()}
+        if (WANTED_VARIABLE not in low.get("variable", "").lower()
+                or WANTED_FUEL not in low.get("fuel", "").lower()):
+            continue
+        try:
+            yield date.fromisoformat(low.get("date", "")[:10]), \
+                float(low.get("value", ""))
+        except (ValueError, TypeError):
+            continue
 
 
 def _previous_week(rows: list[dict], latest: date) -> float | None:

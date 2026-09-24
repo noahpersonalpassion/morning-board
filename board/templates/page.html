@@ -11,165 +11,212 @@
 <!--PWAHEAD-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
+  /* Light is the board's real face. It was chosen for tone: a morning
+     utility should feel like paper on a kitchen table, not like a trading
+     desk. Dark exists so that opening this in bed at 6am does not hurt,
+     and it is a warm dark for the same reason — the same room with the
+     lights off, not a different product. */
   :root {
     color-scheme: light;
-    --ground:#EFF2F0; --surface:#FFFFFF; --ink:#121714; --muted:#5B635D;
-    --rule:#D8DED9; --rule-soft:#E7EBE8; --accent:#14564B; --ok:#2F6B4F;
-    --warn:#8A5A00; --warn-bg:#F6EEDA; --alert:#A32A1C; --alert-bg:#F8E8E4;
-    --off:#9AA39C; --bar:#BAC7C2; --rain:#2C5F8A;
+    --ground:#EFEDE6; --tile:#FFFFFF; --rule:#E0DED5; --track:#ECEAE2;
+    --ink:#141815; --muted:#5E6862; --soft:#4A524D; --faint:#8A928C;
+    --ok:#2F7A68; --warn:#8A5A0C; --warn-bg:#F7EFDC;
+    --alert:#A03418; --alert-bg:#FBEDE8; --alert-rule:#E5C3B8;
+    --on-alert:#FFFFFF; --bar:#B9C2BC; --rain:#2C5F8A;
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       color-scheme: dark;
-      --ground:#0E1210; --surface:#151A17; --ink:#E8EDE9; --muted:#98A199;
-      --rule:#273128; --rule-soft:#1E2620; --accent:#5FC9B4; --ok:#6FBF92;
-      --warn:#DDB264; --warn-bg:#2A2318; --alert:#E8897A; --alert-bg:#2C1B18;
-      --off:#666F68; --bar:#3A4842; --rain:#7FB3DD;
+      --ground:#12110F; --tile:#1B1A17; --rule:#2C2A25; --track:#272520;
+      --ink:#EDEBE4; --muted:#9B968B; --soft:#BCB7AC; --faint:#7A756B;
+      --ok:#5FBFA6; --warn:#D8A75A; --warn-bg:#2A2318;
+      --alert:#E89273; --alert-bg:#2A1913; --alert-rule:#563024;
+      --on-alert:#2A1913; --bar:#4A4740; --rain:#7FB3DD;
     }
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --ground:#0E1210; --surface:#151A17; --ink:#E8EDE9; --muted:#98A199;
-    --rule:#273128; --rule-soft:#1E2620; --accent:#5FC9B4; --ok:#6FBF92;
-    --warn:#DDB264; --warn-bg:#2A2318; --alert:#E8897A; --alert-bg:#2C1B18;
-    --off:#666F68; --bar:#3A4842; --rain:#7FB3DD;
+    --ground:#12110F; --tile:#1B1A17; --rule:#2C2A25; --track:#272520;
+    --ink:#EDEBE4; --muted:#9B968B; --soft:#BCB7AC; --faint:#7A756B;
+    --ok:#5FBFA6; --warn:#D8A75A; --warn-bg:#2A2318;
+    --alert:#E89273; --alert-bg:#2A1913; --alert-rule:#563024;
+    --on-alert:#2A1913; --bar:#4A4740; --rain:#7FB3DD;
   }
   * { box-sizing: border-box; }
   body {
     margin:0; background:var(--ground); color:var(--ink);
     font-family:'Archivo', system-ui, sans-serif; -webkit-font-smoothing:antialiased;
   }
-  img { max-width: 100%; }
+  img, svg { max-width: 100%; }
+  ul, ol { list-style:none; margin:0; padding:0; }
   .wrap {
-    max-width:560px; margin:0 auto; padding-inline:18px; padding-block:34px 26px;
-    display:flex; flex-direction:column; gap:24px;
+    max-width:430px; margin:0 auto; padding-inline:16px; padding-block:22px 24px;
+    display:flex; flex-direction:column; gap:10px;
   }
-  .top { display:flex; flex-direction:column; gap:10px; }
-  .stamp { display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-  h1 { margin:0; font-size:25px; font-weight:700; letter-spacing:-0.02em; }
-  .place {
-    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:11px;
-    letter-spacing:0.09em; color:var(--muted); text-transform:uppercase;
+
+  .top { display:flex; flex-direction:column; gap:6px; margin-bottom:2px; }
+  .stamp { display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  h1 { margin:0; font-size:19px; font-weight:700; letter-spacing:-0.015em; }
+  .place, .mono {
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9.5px;
+    letter-spacing:0.13em; color:var(--muted); text-transform:uppercase;
   }
-  .state { margin:0; font-size:14.5px; line-height:1.5; color:var(--muted); max-width:46ch; }
+  .state { margin:0; font-size:13.5px; line-height:1.5; color:var(--soft); }
   .state strong { color:var(--ink); font-weight:600; }
 
-  .zone { display:flex; flex-direction:column; gap:9px; }
-  .zone-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding-inline:2px; }
-  .zone-head h2 {
-    margin:0; font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:10.5px;
-    font-weight:500; letter-spacing:0.13em; text-transform:uppercase; color:var(--muted);
-  }
-  .zone-head .cap {
-    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:10px;
-    letter-spacing:0.06em; color:var(--off);
+  /* Icon + label, identical in every compartment so a tile is findable
+     by its glyph before any of its text is read. */
+  .ico { display:flex; align-items:center; color:var(--muted); }
+  .ico svg { width:15px; height:15px; display:block; }
+  .ico.alert, .lbl.alert { color:var(--alert); }
+  .lbl {
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9px;
+    letter-spacing:0.12em; text-transform:uppercase; color:var(--muted);
   }
 
-  .board { list-style:none; margin:0; padding:0; background:var(--surface); border-block:1px solid var(--rule); }
-  .row {
-    display:grid; grid-template-columns:9px 84px 1fr; align-items:baseline;
-    column-gap:13px; row-gap:5px; padding:15px 15px 15px 13px;
-    border-top:1px solid var(--rule-soft);
+  /* CARD — full width, its own colour: still actionable, still losable. */
+  .card {
+    background:var(--alert-bg); border:1px solid var(--alert-rule);
+    border-left:3px solid var(--alert); border-radius:9px; padding:13px 14px;
+    display:flex; flex-direction:column; gap:4px;
   }
-  .row:first-child { border-top:0; }
-  .mark { width:9px; height:9px; border-radius:2px; background:var(--ok); align-self:center; grid-row:1 / span 2; }
-  .row[data-state="quiet"]  .mark { background:transparent; box-shadow:inset 0 0 0 1.5px var(--off); }
-  .row[data-state="paused"] .mark { background:var(--warn); }
-  .row[data-state="unread"] .mark { background:var(--warn); }
-  .row[data-state="urgent"] .mark { background:var(--alert); }
-  .row[data-state="off"]    .mark { background:transparent; box-shadow:inset 0 0 0 1.5px var(--rule); }
-  .label {
-    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:10.5px;
-    letter-spacing:0.1em; text-transform:uppercase; color:var(--muted);
-    align-self:center; grid-row:1 / span 2;
+  .card-top { display:flex; align-items:center; gap:7px; }
+  .card-read {
+    margin-left:auto; font-size:19px; font-weight:700; color:var(--alert);
+    font-variant-numeric:tabular-nums; line-height:1;
   }
-  .read { font-size:19px; font-weight:600; letter-spacing:-0.01em; line-height:1.25; font-variant-numeric:tabular-nums; }
-  .read .unit { font-weight:500; color:var(--muted); font-size:15px; }
-  /* What it means for you. Full ink, because this is the line the board
-     exists to produce; the reading above it is only the evidence. */
-  .effect { grid-column:3; font-size:14px; line-height:1.45; color:var(--ink); }
-  .note { grid-column:3; font-size:12.5px; line-height:1.45; color:var(--muted); }
-  .note a { color:var(--accent); text-underline-offset:3px; }
-  .row[data-state="off"] .read { color:var(--off); font-weight:500; }
+  .card-read .unit { font-size:12px; font-weight:500; }
+  .card-eff { margin:0; font-size:12.5px; line-height:1.45; color:var(--soft); }
+  .card .act {
+    align-self:flex-start; margin-top:4px; background:var(--alert);
+    color:var(--on-alert); border-radius:5px; padding:10px 12px;
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:10px;
+    letter-spacing:0.07em; text-transform:uppercase; text-decoration:none;
+    min-height:38px; display:inline-flex; align-items:center;
+  }
+
+  /* GRID — one measured value per tile. */
+  .grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
+  .tile {
+    background:var(--tile); border:1px solid var(--rule); border-radius:9px;
+    padding:12px 13px; display:flex; flex-direction:column; gap:7px;
+  }
+  .tile.wide { grid-column:1 / -1; }
+  .tile-top { display:flex; align-items:center; gap:7px; }
+  .read {
+    font-size:26px; font-weight:700; letter-spacing:-0.02em; line-height:1;
+    font-variant-numeric:tabular-nums;
+  }
+  .read .unit { font-size:13px; font-weight:500; color:var(--muted); margin-left:4px; letter-spacing:0; }
+  .eff { margin:0; font-size:11.5px; line-height:1.4; color:var(--soft); }
+  .tile .act {
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9.5px;
+    letter-spacing:0.06em; color:var(--ok); text-underline-offset:3px;
+    min-height:22px; display:inline-flex; align-items:center;
+  }
+
+  /* The range under a reading: what turns 320 into "near the top". */
+  .bar { height:4px; background:var(--track); border-radius:2px; position:relative; }
+  .bar .fill { position:absolute; left:0; top:0; height:4px; border-radius:2px; background:var(--ok); }
+  .bar .fill.warn { background:var(--warn); }
+  .bar .fill.alert { background:var(--alert); }
+  .ends {
+    display:flex; justify-content:space-between; gap:4px;
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:8px;
+    letter-spacing:0.05em; text-transform:uppercase; color:var(--faint);
+  }
+  .ends .mid { color:var(--muted); }
+
+  /* STRIP — one line for anything with nothing to report. */
+  .strips { display:flex; flex-direction:column; gap:8px; }
+  .strip {
+    background:var(--tile); border:1px solid var(--rule); border-radius:9px;
+    padding:10px 13px; display:flex; align-items:center; gap:9px;
+  }
+  .strip-note { margin:0; flex-grow:1; font-size:11.5px; line-height:1.35; color:var(--soft); }
+  .strip-read { font-size:13px; font-weight:600; color:var(--muted); flex-shrink:0; }
+  .strip[data-state="off"] { opacity:0.72; }
+  .strip[data-state="unread"] .lbl, .strip[data-state="paused"] .lbl { color:var(--warn); }
+  .strip[data-state="unread"] .ico, .strip[data-state="paused"] .ico { color:var(--warn); }
+
   .flag {
     display:inline-block; font-family:'IBM Plex Mono', ui-monospace, monospace;
-    font-size:9.5px; letter-spacing:0.08em; text-transform:uppercase;
-    padding:2.5px 6px; border-radius:3px; vertical-align:1.5px; margin-left:7px; font-weight:500;
+    font-size:8.5px; letter-spacing:0.07em; text-transform:uppercase;
+    padding:2px 5px; border-radius:3px; vertical-align:3px; margin-left:6px;
+    font-weight:500;
   }
   .flag.warn { background:var(--warn-bg); color:var(--warn); }
   .flag.alert { background:var(--alert-bg); color:var(--alert); }
 
-  /* The alert bar. No markup at all on a quiet morning, so there is no
-     empty furniture here to train the eye to skip this spot. */
+  /* The alert bar: no markup at all on a quiet morning. */
   .alert {
-    background:var(--alert-bg); border-left:3px solid var(--alert);
-    border-radius:4px; padding:13px 15px; display:flex;
-    flex-direction:column; gap:5px;
+    background:var(--alert-bg); border:1px solid var(--alert-rule);
+    border-left:3px solid var(--alert); border-radius:9px; padding:13px 14px;
+    display:flex; flex-direction:column; gap:4px;
   }
-  .alert-head { display:flex; align-items:baseline; gap:9px; }
+  .alert-top { display:flex; align-items:center; gap:7px; }
+  .alert-ico { color:var(--alert); }
   .alert-tag {
-    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9.5px;
-    letter-spacing:0.1em; text-transform:uppercase; color:var(--alert);
-    font-weight:500;
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9px;
+    letter-spacing:0.12em; text-transform:uppercase; color:var(--alert); font-weight:500;
   }
   .alert-read {
-    font-size:19px; font-weight:700; letter-spacing:-0.01em;
-    color:var(--alert); font-variant-numeric:tabular-nums;
+    margin-left:auto; font-size:19px; font-weight:700; color:var(--alert);
+    font-variant-numeric:tabular-nums; line-height:1;
   }
-  .alert-effect { margin:0; font-size:14.5px; line-height:1.45; color:var(--ink); }
-  .alert-note { margin:0; font-size:12.5px; line-height:1.45; color:var(--muted); }
+  .alert-eff { margin:0; font-size:13.5px; line-height:1.45; color:var(--ink); }
+  .alert-note { margin:0; font-size:11.5px; line-height:1.45; color:var(--soft); }
   .alert-note a { color:var(--alert); text-underline-offset:3px; }
 
-  .week { grid-column:3; margin-top:4px; }
-  .week svg { display:block; width:100%; height:auto; max-width:100%; }
+  .week svg { display:block; width:100%; height:auto; }
   .wk-high { font:500 10px 'IBM Plex Mono', monospace; fill:var(--muted); }
   .wk-high.now { fill:var(--ink); }
-  .wk-day { font:400 10px 'IBM Plex Mono', monospace; fill:var(--off); letter-spacing:.06em; }
+  .wk-day { font:400 10px 'IBM Plex Mono', monospace; fill:var(--faint); letter-spacing:.06em; }
   .wk-day.now { fill:var(--ink); font-weight:500; }
   .wk-rain { font:500 10px 'IBM Plex Mono', monospace; fill:var(--rain); }
 
-  .country { list-style:none; margin:0; padding:0; }
+  .zone { display:flex; flex-direction:column; gap:9px; margin-top:4px; }
+  .zone-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding-inline:2px; }
+  .zone-head h2 {
+    margin:0; font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9.5px;
+    font-weight:500; letter-spacing:0.13em; text-transform:uppercase; color:var(--muted);
+  }
+  .zone-head .cap {
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:8.5px;
+    letter-spacing:0.06em; color:var(--faint);
+  }
+  .country-lead { margin:0; font-size:12.5px; line-height:1.45; color:var(--soft); }
+  .country { background:var(--tile); border:1px solid var(--rule); border-radius:9px; padding:4px 13px; }
   .story {
-    display:grid; grid-template-columns:17px 1fr; column-gap:11px;
-    padding-block:10px; border-top:1px solid var(--rule-soft); align-items:baseline;
+    display:flex; gap:9px; align-items:baseline; padding-block:10px;
+    border-top:1px solid var(--rule);
   }
-  .story:first-child { border-top:0; padding-top:2px; }
-  .story .n { font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:10.5px; color:var(--off); font-variant-numeric:tabular-nums; }
-  .story p { margin:0; font-size:14.5px; line-height:1.4; }
-  .story .where {
-    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9.5px;
-    letter-spacing:0.08em; text-transform:uppercase; color:var(--accent);
-    margin-left:6px; white-space:nowrap;
-  }
+  .story:first-child { border-top:0; }
+  .story p { margin:0; font-size:12.5px; line-height:1.4; }
   .story .seen {
-    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9.5px;
-    letter-spacing:0.08em; text-transform:uppercase; color:var(--off);
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:8.5px;
+    color:var(--tile); background:var(--ok); border-radius:3px;
+    padding:2px 5px; flex-shrink:0; font-weight:500;
+  }
+  .story .where {
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:8.5px;
+    letter-spacing:0.07em; text-transform:uppercase; color:var(--ok);
     margin-left:6px; white-space:nowrap;
   }
-  .country-lead { margin:0 0 4px; font-size:13.5px; line-height:1.5; color:var(--ink); }
-  .country-foot { font-size:12.5px; line-height:1.5; color:var(--muted); padding-top:12px; margin:0; border-top:1px solid var(--rule); }
+  .country-empty { margin:0; font-size:12.5px; line-height:1.45; color:var(--soft); }
+  .country-foot { font-size:11px; line-height:1.5; color:var(--faint); margin:0; padding-inline:2px; }
 
-  .foot { display:flex; flex-direction:column; gap:7px; align-items:center; text-align:center; padding-block:14px 4px; }
-  .foot h2 { margin:0; font-size:15px; font-weight:600; }
-  .foot p { margin:0; font-size:12.5px; line-height:1.5; color:var(--muted); max-width:36ch; }
-  .foot .next {
-    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:10px;
-    letter-spacing:0.09em; text-transform:uppercase; color:var(--muted); margin-top:5px;
-  }
-  a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  .foot { display:flex; flex-direction:column; gap:5px; align-items:center; text-align:center; padding-block:16px 2px; }
+  .foot h2 { margin:0; font-size:14.5px; font-weight:600; }
+  .foot p { margin:0; font-size:11.5px; line-height:1.5; color:var(--muted); max-width:34ch; }
+  a:focus-visible, button:focus-visible { outline:2px solid var(--ok); outline-offset:2px; }
 <!--WHATSNEWSTYLE-->
 <!--STALESTYLE-->
 
-  @media (max-width:400px) {
-    .row { grid-template-columns:9px 1fr; }
-    .label { grid-row:1; grid-column:2; align-self:baseline; }
-    .read, .effect, .note, .week { grid-column:2; }
-    /* Beside the label, not floating alongside the chart: at this width
-       the mark spanning every row parked it next to the weather graphic,
-       where it read as part of the chart rather than the row's state. */
-    .mark { grid-row:1; align-self:center; }
+  @media (max-width:340px) {
+    .grid { grid-template-columns:1fr; }
   }
 </style>
 </head>
@@ -186,35 +233,28 @@
   </header>
 
   <!--ALERT-->
+  <!--CARDS-->
+  <!--GRID-->
+  <!--STRIPS-->
 
   <section class="zone">
     <div class="zone-head">
-      <h2>Your morning</h2>
-      <span class="cap"><!--CHECKED--></span>
-    </div>
-    <ol class="board"><!--PANELS--></ol>
-  </section>
-
-  <section class="zone">
-    <div class="zone-head">
-      <h2>The country</h2>
+      <h2>Elsewhere</h2>
       <span class="cap"><!--COUNTRYCAP--></span>
     </div>
     <p class="country-lead"><!--COUNTRYEFFECT--></p>
     <!--COUNTRY-->
     <p class="country-foot">
-      <!--COUNTRYNOTE--> Five is the cap, not today&rsquo;s count, and this is
-      the only part of the board that gets shorter as the day goes on rather
-      than longer. Everything above it is an instrument reading; this is the
-      one section written by people, which is why it is counted rather than
-      trusted.
+      <!--COUNTRYNOTE--> Everything above this is an instrument reading; this
+      is the one section written by people, which is why it is counted rather
+      than trusted.
     </p>
   </section>
 
   <footer class="foot">
-    <h2>That&rsquo;s the board.</h2>
+    <h2>You&rsquo;re caught up.</h2>
     <p><!--FOOT--></p>
-    <span class="next">Built <!--BUILT--> &middot; next read 06:00</span>
+    <span class="mono"><!--CHECKED--> &middot; built <!--BUILT--> &middot; next 06:00</span>
   </footer>
 
 </div>

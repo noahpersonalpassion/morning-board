@@ -12,7 +12,7 @@ import json
 from dataclasses import dataclass
 
 from notice.feeds import fetch
-from .base import Panel, PanelResult, State
+from .base import Panel, PanelResult, Scale, State
 
 API = (
     "https://api.open-meteo.com/v1/forecast"
@@ -56,16 +56,26 @@ class WeatherPanel:
                         d["temperature_2m_min"],
                         d["precipitation_probability_max"]))
 
+        # Today's own low and high are the only band a current temperature
+        # belongs on. A fixed 0\u201330 scale would put a New Zealand spring
+        # morning near the bottom of every tile all year and say nothing.
+        _, high, low, _ = days[0]
+
         return PanelResult(
             state=State.LIVE,
             reading=f"{temp:.1f}\u00b0C",
             unit=f"{cond} now" if cond else "now",
+            icon="weather",
             effect=self._summary(days),
             note="Source: Open-Meteo. Bars are daily highs on one scale; "
                  "blue figures are millimetres of rain.",
+            scale=Scale(value=float(temp), low=float(low), high=float(high),
+                        low_label=f"{low:.0f}\u00b0 low",
+                        mid_label="today",
+                        high_label=f"{high:.0f}\u00b0 high"),
             extra_html=week_strip(days),
             as_of=now.get("time", ""),
-            meta={"days": len(days)},
+            meta={"days": len(days), "low": low, "high": high},
         )
 
     def _summary(self, days) -> str:

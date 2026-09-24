@@ -206,6 +206,7 @@ class CountryPanel:
         if not top:
             return PanelResult(
                 state=State.QUIET,
+                icon="globe",
                 reading="Nothing",
                 effect="No story in the last two days was carried by enough "
                        "outlets to measure.",
@@ -229,6 +230,7 @@ class CountryPanel:
         best = stories[0]["outlets"]
         return PanelResult(
             state=State.LIVE,
+            icon="globe",
             reading=str(len(stories)),
             unit="of many",
             effect=(
@@ -271,6 +273,7 @@ class CountryPanel:
         ]
         return PanelResult(
             state=State.LIVE,
+            icon="globe",
             reading=str(len(stories)),
             unit="of many",
             effect=(
