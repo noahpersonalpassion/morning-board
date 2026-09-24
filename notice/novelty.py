@@ -78,28 +78,47 @@ class HeadlineCorpus:
 
     # -- loading ---------------------------------------------------------
 
-    def load_feeds(self, feeds: dict[str, str]) -> None:
-        """feeds: {outlet name: rss url}. A dead feed is recorded, not fatal."""
+    def load_feeds(self, feeds: dict[str, str | list[str]]) -> None:
+        """feeds: {outlet name: rss url, or a list of them}.
+
+        An outlet may publish several feeds — RNZ alone has a dozen by topic
+        — and reading more of them finds more of what that newsroom covered.
+        They are deliberately collapsed under one outlet name, because the
+        thing downstream counts is *independent newsrooms*: four RNZ topic
+        feeds carrying one story is one newsroom carrying it, and letting
+        that read as four would turn a measurement into a fiction.
+
+        A dead feed is recorded, not fatal. An outlet is "ok" if any one of
+        its feeds yielded something inside the window.
+        """
         cutoff = datetime.now(timezone.utc) - timedelta(days=self.window_days)
-        for outlet, url in feeds.items():
-            try:
-                items = read(url)
-            except FeedError as e:
-                self.outlets_failed.append((outlet, str(e)))
-                continue
-            kept = 0
-            for i in items:
-                if i.published >= cutoff:
-                    self.headlines.append(Headline(
-                        title=i.title, outlet=outlet,
-                        published=i.published, url=i.link,
-                    ))
-                    kept += 1
+        for outlet, urls in feeds.items():
+            if isinstance(urls, str):
+                urls = [urls]
+            kept, errors = 0, []
+            seen: set[str] = set()
+            for url in urls:
+                try:
+                    items = read(url)
+                except FeedError as e:
+                    errors.append(str(e))
+                    continue
+                for i in items:
+                    # One story often appears in several of an outlet's own
+                    # feeds; counted twice it would look like corroboration.
+                    key = i.title.strip().lower()
+                    if i.published >= cutoff and key not in seen:
+                        seen.add(key)
+                        self.headlines.append(Headline(
+                            title=i.title, outlet=outlet,
+                            published=i.published, url=i.link,
+                        ))
+                        kept += 1
             if kept:
                 self.outlets_ok.append(outlet)
             else:
                 self.outlets_failed.append(
-                    (outlet, "no items inside the window")
+                    (outlet, errors[0] if errors else "no items inside the window")
                 )
 
     def load_fixture(self, path: Path) -> None:

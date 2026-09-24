@@ -39,7 +39,16 @@ class PanelResult:
     state: State
     reading: str                 # the big text: "13.2°C", "Nothing", "1 open"
     unit: str = ""               # quiet trailing text inside the reading
-    note: str = ""               # the explanatory line under it
+    # What the reading means for the person reading it, in their terms and
+    # their units: "a tank costs $7 more than last week", not "up 14c".
+    #
+    # This is the difference between a dashboard and a utility. A dashboard
+    # shows you a number and leaves the translation as an exercise; a utility
+    # has already done it. Every effect line must be derivable by arithmetic
+    # from the reading — no panel interprets, because an interpretation is a
+    # thing that can be wrong in a way a reader cannot check.
+    effect: str = ""
+    note: str = ""               # where the number came from; provenance
     flag: str = ""               # small chip: "source paused", "cannot undo"
     flag_kind: str = "warn"      # warn | alert
     extra_html: str = ""         # a panel may draw its own thing (the chart)

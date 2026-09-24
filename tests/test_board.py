@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from board.panels.base import PanelResult, State, safe_render  # noqa: E402
 from board.panels.daylight import _clock, _delta_phrase  # noqa: E402
-from board.render import _first_clause, _off_summary  # noqa: E402
+from board.render import _first_clause, _off_summary, render_page  # noqa: E402
 from board.whatsnew import state_blob  # noqa: E402
 
 
@@ -139,3 +139,108 @@ class TestPageStructure(unittest.TestCase):
     def test_every_marker_is_replaced(self):
         import re
         self.assertEqual(re.findall(r"<!--[A-Z]+-->", self.page()), [])
+
+
+class TestFreshness(unittest.TestCase):
+    """The board applying its own rule to itself.
+
+    The service worker serves the cached page first, so after a rebuild the
+    reader sees the previous board rendered exactly like a current one — the
+    same failure every panel refuses to commit, one level up.
+    """
+
+    def page(self):
+        from board.panels.base import PanelResult, State
+        from board.render import render_page
+        rows = [("Weather", PanelResult(state=State.LIVE, reading="12°C"))]
+        country = PanelResult(state=State.LIVE, reading="0",
+                              meta={"stories": [], "cap": 5, "source": "T"})
+        return render_page(site_name="Board", place="Here",
+                           rows=rows, country=country)
+
+    def test_page_stamps_its_own_build_time(self):
+        import re
+        self.assertRegex(self.page(), r"var BUILT = '\d{4}-\d{2}-\d{2}T")
+
+    def test_notice_is_hidden_until_proven_stale(self):
+        """It must not flash on a page that is perfectly current."""
+        html = self.page()
+        self.assertIn('class="stale" id="stale"', html)
+        self.assertIn(".stale { \n" if False else ".stale {", html)
+        self.assertIn("display: none", html)
+
+    def test_reload_clears_the_cache_first(self):
+        """Reloading without dropping the cached shell just serves the same
+        stale copy back, and the button looks broken."""
+        self.assertIn("caches.delete", self.page())
+
+
+class TestAlertBar(unittest.TestCase):
+    """The bar must be furniture on no morning and unmissable on one."""
+
+    def page(self, alert=None, weather_effect="Rain most days, from Friday"):
+        rows = [
+            ("Weather", PanelResult(state=State.LIVE, reading="14.2C",
+                                    effect=weather_effect,
+                                    note="Source: Open-Meteo.")),
+        ]
+        country = PanelResult(state=State.LIVE, reading="0",
+                              meta={"stories": [], "cap": 5, "source": "T"})
+        return render_page(site_name="Board", place="Here", rows=rows,
+                           country=country, alert=alert)
+
+    def firing(self):
+        return PanelResult(state=State.URGENT, reading="M5.9",
+                           effect="5 km south of Taumarunui.",
+                           note="Met the rule.", flag="geonet",
+                           flag_kind="alert")
+
+    def test_quiet_morning_renders_no_bar_at_all(self):
+        """Not a hidden bar, not an empty one: no markup.
+
+        An empty alert bar is permanent furniture, and permanent furniture
+        in the place alerts appear is how a reader learns to skip that place.
+        """
+        html = self.page(alert=PanelResult(state=State.QUIET,
+                                           reading="Nothing"))
+        self.assertNotIn('class="alert"', html)
+
+    def test_no_alert_panel_at_all_is_fine(self):
+        self.assertNotIn('class="alert"', self.page(alert=None))
+
+    def test_firing_alert_appears_and_leads_the_page(self):
+        html = self.page(alert=self.firing())
+        self.assertIn('class="alert"', html)
+        self.assertIn("Taumarunui", html)
+        # and it outranks the weather in the lede
+        lede = html.split('<p class="state">')[1].split("<span")[0]
+        self.assertLess(lede.index("M5.9"), lede.index("Rain"))
+
+    def test_lede_takes_the_effect_not_the_note(self):
+        """The lede used to lift the weather note's first sentence, which
+        coupled the top line of the page to a provenance field. The day the
+        note began "Source: Open-Meteo", so did the lede."""
+        html = self.page(weather_effect="Rain most days, from Friday")
+        lede = html.split('<p class="state">')[1].split("<span")[0]
+        self.assertIn("Rain most days", lede)
+        self.assertNotIn("Source:", lede)
+
+    def test_unread_alert_is_not_a_bar(self):
+        """A failed alert feed must not render as a bar — and must not
+        render as nothing either.
+
+        `_alert` deliberately returns empty for any non-URGENT state; the
+        other half of the contract lives in build.py, which appends an
+        UNREAD alert to the ordinary rows so the reader is told nobody
+        looked. This test pins the half that lives here.
+        """
+        from board.render import _alert
+        unread = PanelResult(state=State.UNREAD, reading="Unread",
+                             note="Alert could not be read this morning.")
+        self.assertEqual(_alert(unread), "")
+
+    def test_page_survives_an_alert_without_breaking_its_own_css(self):
+        html = self.page(alert=self.firing())
+        self.assertEqual(html.count("<style>"), 1)
+        self.assertEqual(html.count("</style>"), 1)
+        self.assertNotIn("<!--", html.split("<body>")[1])

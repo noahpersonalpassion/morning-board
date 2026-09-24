@@ -55,9 +55,16 @@ def manifest(site_name: str, icons: list[str]) -> str:
 SERVICE_WORKER = """\
 // Stale-while-revalidate. The board is a daily snapshot, so showing the
 // cached copy instantly and refreshing behind it is the correct behaviour,
-// not a compromise. The page states its build time, so a cached board can
-// never pass itself off as a fresh one.
-const CACHE = 'board-v1';
+// not a compromise — offline on the train you still get this morning.
+//
+// But it does mean the first load after a rebuild shows the PREVIOUS board,
+// rendered exactly like a current one. That is the same lie the fuel panel
+// refuses to tell, so the page checks board.json on load and says plainly
+// when it is holding an older build (board/freshness.py).
+//
+// Bump CACHE when the shell changes, so an old worker cannot keep serving a
+// stale page forever.
+const CACHE = 'board-v2';
 const SHELL = ['./', './index.html', './board.json'];
 
 self.addEventListener('install', (e) => {

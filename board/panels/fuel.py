@@ -34,6 +34,11 @@ STALE_AFTER_DAYS = 12
 WANTED_VARIABLE = "board price"
 WANTED_FUEL = "regular petrol"
 
+# A mid-size car. Stated rather than hidden, because the dollar figure below
+# is only as honest as the assumption it rests on, and a reader with a Hilux
+# should be able to see the number to scale.
+TANK_LITRES = 50.0
+
 
 @dataclass
 class FuelPanel:
@@ -83,26 +88,35 @@ class FuelPanel:
         # anyway.
         note = (
             f"National average board price, week ending "
-            f"{when.strftime('%-d %B')}."
+            f"{when.strftime('%-d %B')}. Source: MBIE weekly fuel monitoring."
         )
         move = None
         if previous is not None:
             move = value - previous
-            if abs(move) < 0.5:
-                note += " Unchanged on the week."
-            else:
-                note += (
-                    f" {'Up' if move > 0 else 'Down'} {abs(move):.0f}c "
-                    f"on the week."
-                )
+
+        # Cents per litre is the unit the industry quotes in and nobody
+        # thinks in. A tank is the unit you actually pay in, so the board
+        # does the multiplication rather than leaving it to you at 6am.
+        tank = value * TANK_LITRES / 100
+        effect = f"A {TANK_LITRES:.0f}-litre tank costs about ${tank:.0f}"
+        if move is not None and abs(move) >= 0.5:
+            swing = abs(move) * TANK_LITRES / 100
+            effect += (f" — ${swing:.0f} "
+                       f"{'more' if move > 0 else 'less'} than last week.")
+        elif move is not None:
+            effect += ", unchanged on the week."
+        else:
+            effect += "."
 
         return PanelResult(
             state=State.LIVE,
             reading=f"{value:.0f}",
             unit="c/L regular",
+            effect=effect,
             note=note,
             as_of=when.isoformat(),
-            meta={"age_days": age, "week_change": move},
+            meta={"age_days": age, "week_change": move,
+                  "tank_cost": round(tank, 2)},
         )
 
 

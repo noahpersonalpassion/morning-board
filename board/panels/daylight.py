@@ -34,6 +34,10 @@ API = (
 # Below this the advice is "nothing special"; at or above it, shade matters.
 UV_WORTH_SAYING = 6
 
+# Daylight is measured from here, not from midnight: five o'clock is when
+# the question "is there still light?" starts having a practical answer.
+AFTER_WORK_FROM = 17
+
 # Roughly minutes of unprotected exposure before a fair skin burns. NIWA's
 # public guidance rounds to these; they are indicative, not medical.
 UV_BURN_MINUTES = {11: 10, 8: 15, 6: 25, 3: 45}
@@ -64,11 +68,15 @@ class DaylightPanel:
             (t_set.hour * 60 + t_set.minute) - (y_set.hour * 60 + y_set.minute)
         )
 
-        note = f"Sunrise {_clock(t_rise)}. {_delta_phrase(delta)}"
+        note = (f"Sunrise {_clock(t_rise)}, sunset {_clock(t_set)}. "
+                f"{_delta_phrase(delta)} Source: Open-Meteo, computed "
+                f"astronomically rather than observed.")
         flag, kind = "", "warn"
+        effect = _after_work(t_set)
         if uv is not None and uv >= UV_WORTH_SAYING:
             burn = next((m for t, m in UV_BURN_MINUTES.items() if uv >= t), 60)
-            note += f" UV peaks at {uv:.0f} — about {burn} minutes to burn."
+            effect += (f" UV peaks at {uv:.0f} — unprotected fair skin burns "
+                       f"in about {burn} minutes.")
             flag, kind = f"uv {uv:.0f}", "warn" if uv < 8 else "alert"
 
         return PanelResult(
@@ -77,6 +85,7 @@ class DaylightPanel:
             unit="sunset",
             flag=flag,
             flag_kind=kind,
+            effect=effect,
             note=note,
             as_of=d["sunset"][1],
             meta={"sunrise": d["sunrise"][1], "sunset": d["sunset"][1],
@@ -93,6 +102,39 @@ def _clock(dt: datetime) -> str:
     hour = dt.hour % 12 or 12
     suffix = "am" if dt.hour < 12 else "pm"
     return f"{hour}:{dt.minute:02d}{suffix}"
+
+
+def _after_work(sunset: datetime) -> str:
+    """Daylight expressed as the thing people actually plan with.
+
+    "Sunset 6:18pm" is a fact about the sun. "An hour and a quarter of light
+    after five" is a fact about your evening, and it is the same fact — just
+    measured from the moment a reader cares about rather than from noon.
+    """
+    minutes = (sunset.hour * 60 + sunset.minute) - AFTER_WORK_FROM * 60
+    if minutes <= 0:
+        return "Dark before five."
+    if minutes < 60:
+        return f"About {minutes} minutes of light after five."
+
+    hours, rest = divmod(minutes, 60)
+    quarter = 15 * round(rest / 15)
+    if quarter == 60:
+        hours, quarter = hours + 1, 0
+    # "1 and a quarter hours" is what a calculator says. A person says "an
+    # hour and a quarter" — and the fraction takes the plural only when it
+    # trails the noun, so it is "three quarters" after "an hour" but "three
+    # quarter" before "hours".
+    if hours == 1:
+        tail = {0: "", 15: " and a quarter", 30: " and a half",
+                45: " and three quarters"}[quarter]
+        return f"About an hour{tail} of light after five."
+
+    tail = {0: "", 15: " and a quarter", 30: " and a half",
+            45: " and three quarter"}[quarter]
+    spoken = {2: "two", 3: "three", 4: "four", 5: "five",
+              6: "six", 7: "seven"}.get(hours, str(hours))
+    return f"About {spoken}{tail} hours of light after five."
 
 
 def _delta_phrase(minutes: int) -> str:

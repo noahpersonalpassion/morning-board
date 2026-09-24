@@ -17,6 +17,7 @@ is the one outcome worse than an incomplete board.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 from pathlib import Path
@@ -25,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from board import config
 from board.news import NEWS_FEEDS
+from board.panels.alerts import AlertPanel
 from board.panels.base import State, render_all, safe_render
 from board.panels.country import CountryPanel
 from board.panels.daylight import DaylightPanel
@@ -76,6 +78,40 @@ def build_panels(site, profile, corpus):
     ]
 
 
+def previous_alert(out_dir: Path) -> dict:
+    """What the last build saw, so this one can spot a change.
+
+    Volcanic alert levels are states, not events: the feed says Ruapehu is at
+    level 1, never that it moved there this morning. The only way to know a
+    level changed is to remember the last one, so the board reads its own
+    previous output.
+
+    Two places, in order: the local site/ directory (present when you build
+    on your own machine) and the published board.json (the only copy that
+    exists in CI, where site/ is not committed). Neither is required — with
+    no previous build there is simply no change to report, which is the
+    correct answer on a first run rather than a reason to fail.
+    """
+    local = out_dir / "board.json"
+    if local.exists():
+        try:
+            prev = json.loads(local.read_text(encoding="utf-8"))
+            return (prev.get("alert") or {}).get("meta") or {}
+        except (ValueError, OSError):
+            pass
+
+    url = os.environ.get("BOARD_PUBLISHED_URL", "").strip()
+    if url:
+        from notice.feeds import FeedError, fetch
+        try:
+            prev = json.loads(fetch(url.rstrip("/") + "/board.json", timeout=20))
+            return (prev.get("alert") or {}).get("meta") or {}
+        except (FeedError, ValueError, KeyError):
+            pass
+
+    return {}
+
+
 class _OffPanel:
     """A row for something not built or not configured yet.
 
@@ -109,17 +145,37 @@ def main(argv: list[str] | None = None) -> int:
     for outlet, why in corpus.outlets_failed:
         print(f"    ! {outlet}: {why[:90]}")
 
+    # Read before anything is written: the alert panel compares against the
+    # previous build's levels, and the previous build lives where this one
+    # is about to land.
+    alert = safe_render(AlertPanel(
+        lat=site.lat, lon=site.lon, place=site.place,
+        previous=previous_alert(out_dir),
+    ))
+
     panels = build_panels(site, config.reader(), corpus)
     results = render_all(panels)
-    country = safe_render(CountryPanel())
+    country = safe_render(CountryPanel(corpus=corpus))
 
     rows = [(p.label, r) for p, r in results]
+
+    # An absent alert bar is a claim: "nothing crossed a line this morning."
+    # That claim is only true if the feed was actually read. When it was not,
+    # the bar must not simply fail to appear — it drops to an ordinary row
+    # saying so, the same way every other panel reports its own silence.
+    demoted = alert.state in (State.UNREAD, State.PAUSED)
+    if demoted:
+        rows.append(("Alert", alert))
+    else:
+        # When it is demoted the rows loop below prints it; printing here
+        # too would log the same panel twice.
+        print(f"    [{alert.state.value:6}] Alert: {alert.reading}")
     for label, r in rows:
         print(f"    [{r.state.value:6}] {label}: {r.reading}")
     print(f"    [{country.state.value:6}] The country: "
           f"{len(country.meta.get('stories', []))} stories")
 
-    data = render_json(rows, country)
+    data = render_json(rows, country, alert)
 
     # Icons, manifest and service worker: makes the page installable on a
     # phone home screen and readable offline. Never fatal — a board without
@@ -134,7 +190,7 @@ def main(argv: list[str] | None = None) -> int:
 
     page = render_page(
         site_name=site.name, place=site.place,
-        rows=rows, country=country, tz=site.timezone,
+        rows=rows, country=country, alert=alert, tz=site.timezone,
         pwa_head=str(pwa["head"]), pwa_register=str(pwa["register"]),
     )
 

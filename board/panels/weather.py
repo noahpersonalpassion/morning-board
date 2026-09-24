@@ -60,7 +60,9 @@ class WeatherPanel:
             state=State.LIVE,
             reading=f"{temp:.1f}\u00b0C",
             unit=f"{cond} now" if cond else "now",
-            note=self._summary(days),
+            effect=self._summary(days),
+            note="Source: Open-Meteo. Bars are daily highs on one scale; "
+                 "blue figures are millimetres of rain.",
             extra_html=week_strip(days),
             as_of=now.get("time", ""),
             meta={"days": len(days)},

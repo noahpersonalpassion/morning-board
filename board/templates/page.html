@@ -87,7 +87,10 @@
   }
   .read { font-size:19px; font-weight:600; letter-spacing:-0.01em; line-height:1.25; font-variant-numeric:tabular-nums; }
   .read .unit { font-weight:500; color:var(--muted); font-size:15px; }
-  .note { grid-column:3; font-size:13px; line-height:1.45; color:var(--muted); }
+  /* What it means for you. Full ink, because this is the line the board
+     exists to produce; the reading above it is only the evidence. */
+  .effect { grid-column:3; font-size:14px; line-height:1.45; color:var(--ink); }
+  .note { grid-column:3; font-size:12.5px; line-height:1.45; color:var(--muted); }
   .note a { color:var(--accent); text-underline-offset:3px; }
   .row[data-state="off"] .read { color:var(--off); font-weight:500; }
   .flag {
@@ -97,6 +100,27 @@
   }
   .flag.warn { background:var(--warn-bg); color:var(--warn); }
   .flag.alert { background:var(--alert-bg); color:var(--alert); }
+
+  /* The alert bar. No markup at all on a quiet morning, so there is no
+     empty furniture here to train the eye to skip this spot. */
+  .alert {
+    background:var(--alert-bg); border-left:3px solid var(--alert);
+    border-radius:4px; padding:13px 15px; display:flex;
+    flex-direction:column; gap:5px;
+  }
+  .alert-head { display:flex; align-items:baseline; gap:9px; }
+  .alert-tag {
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9.5px;
+    letter-spacing:0.1em; text-transform:uppercase; color:var(--alert);
+    font-weight:500;
+  }
+  .alert-read {
+    font-size:19px; font-weight:700; letter-spacing:-0.01em;
+    color:var(--alert); font-variant-numeric:tabular-nums;
+  }
+  .alert-effect { margin:0; font-size:14.5px; line-height:1.45; color:var(--ink); }
+  .alert-note { margin:0; font-size:12.5px; line-height:1.45; color:var(--muted); }
+  .alert-note a { color:var(--alert); text-underline-offset:3px; }
 
   .week { grid-column:3; margin-top:4px; }
   .week svg { display:block; width:100%; height:auto; max-width:100%; }
@@ -119,6 +143,12 @@
     letter-spacing:0.08em; text-transform:uppercase; color:var(--accent);
     margin-left:6px; white-space:nowrap;
   }
+  .story .seen {
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9.5px;
+    letter-spacing:0.08em; text-transform:uppercase; color:var(--off);
+    margin-left:6px; white-space:nowrap;
+  }
+  .country-lead { margin:0 0 4px; font-size:13.5px; line-height:1.5; color:var(--ink); }
   .country-foot { font-size:12.5px; line-height:1.5; color:var(--muted); padding-top:12px; margin:0; border-top:1px solid var(--rule); }
 
   .foot { display:flex; flex-direction:column; gap:7px; align-items:center; text-align:center; padding-block:14px 4px; }
@@ -130,11 +160,12 @@
   }
   a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 <!--WHATSNEWSTYLE-->
+<!--STALESTYLE-->
 
   @media (max-width:400px) {
     .row { grid-template-columns:9px 1fr; }
     .label { grid-row:1; grid-column:2; align-self:baseline; }
-    .read, .note, .week { grid-column:2; }
+    .read, .effect, .note, .week { grid-column:2; }
     /* Beside the label, not floating alongside the chart: at this width
        the mark spanning every row parked it next to the weather graphic,
        where it read as part of the chart rather than the row's state. */
@@ -151,7 +182,10 @@
       <span class="place"><!--STAMP--></span>
     </div>
     <p class="state"><!--LEDE--> <span class="since" id="since"></span></p>
+    <!--STALE-->
   </header>
+
+  <!--ALERT-->
 
   <section class="zone">
     <div class="zone-head">
@@ -166,12 +200,14 @@
       <h2>The country</h2>
       <span class="cap"><!--COUNTRYCAP--></span>
     </div>
+    <p class="country-lead"><!--COUNTRYEFFECT--></p>
     <!--COUNTRY-->
     <p class="country-foot">
-      Five is the cap, not today&rsquo;s count. This is here so you are not
-      blindsided, not so you are informed &mdash; and it is the one part of the
-      board that gets shorter as the day goes on, never longer.
-      Source: <!--COUNTRYSOURCE-->.
+      <!--COUNTRYNOTE--> Five is the cap, not today&rsquo;s count, and this is
+      the only part of the board that gets shorter as the day goes on rather
+      than longer. Everything above it is an instrument reading; this is the
+      one section written by people, which is why it is counted rather than
+      trusted.
     </p>
   </section>
 
@@ -184,6 +220,7 @@
 </div>
 <!--BOARDSTATE-->
 <!--WHATSNEW-->
+<!--STALESCRIPT-->
 <!--PWAREG-->
 </body>
 </html>
