@@ -167,7 +167,7 @@ def render_page(
         .replace("<!--BUILT-->", now.strftime("%-d %b %H:%M"))
         .replace("<!--PWAHEAD-->", pwa_head)
         .replace("<!--PWAREG-->", pwa_register)
-        .replace("<!--WHATSNEWSTYLE-->", f"<style>{WHATSNEW_STYLE}</style>")
+        .replace("<!--WHATSNEWSTYLE-->", WHATSNEW_STYLE)
         .replace("<!--BOARDSTATE-->", state_blob(on))
         .replace("<!--WHATSNEW-->", WHATSNEW_SCRIPT)
     )

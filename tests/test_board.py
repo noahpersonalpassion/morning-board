@@ -107,3 +107,35 @@ class TestDaylight(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestPageStructure(unittest.TestCase):
+    """Regression: the what's-new CSS marker sits inside the page's own
+    <style> block, so its replacement must be bare CSS. Wrapping it in a
+    second <style> nested one inside the other, and the inner closing tag
+    ended the outer block early — every rule after it rendered as visible
+    text at the top of the live page."""
+
+    def page(self) -> str:
+        from board.panels.base import PanelResult, State
+        from board.render import render_page
+        rows = [("Weather", PanelResult(state=State.LIVE, reading="12°C",
+                                        note="Dry all week."))]
+        country = PanelResult(state=State.LIVE, reading="0",
+                              meta={"stories": [], "cap": 5, "source": "Test"})
+        return render_page(site_name="Board", place="Here",
+                           rows=rows, country=country)
+
+    def test_style_tags_are_balanced(self):
+        html = self.page()
+        self.assertEqual(html.count("<style>"), html.count("</style>"))
+
+    def test_no_css_leaks_into_the_body(self):
+        html = self.page()
+        body = html.split("<body>", 1)[1]
+        self.assertNotIn("@media", body)
+        self.assertNotIn("grid-template-columns", body)
+
+    def test_every_marker_is_replaced(self):
+        import re
+        self.assertEqual(re.findall(r"<!--[A-Z]+-->", self.page()), [])
