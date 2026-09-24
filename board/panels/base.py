@@ -79,6 +79,16 @@ class PanelResult:
     # thing that can be wrong in a way a reader cannot check.
     effect: str = ""
     note: str = ""               # where the number came from; provenance
+    # The rule that put this row on the board, in a sentence — the threshold
+    # it crossed, the window it fell inside, the test it passed.
+    #
+    # The board's claim is that it is auditable rather than trustworthy, and
+    # until now that was true of the code and invisible on the page. A reader
+    # could not tell a panel that checked and found nothing from one that
+    # never ran, or know why a fuel price twelve days old would have been
+    # withheld. Stating the rule lets someone disagree with it, which is the
+    # only thing that makes "auditable" mean anything.
+    why: str = ""
     flag: str = ""               # small chip: "source paused", "cannot undo"
     flag_kind: str = "warn"      # warn | alert
     extra_html: str = ""         # a panel may draw its own thing (the chart)

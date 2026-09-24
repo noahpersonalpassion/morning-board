@@ -66,6 +66,10 @@ class WeatherPanel:
             reading=f"{temp:.1f}\u00b0C",
             unit=f"{cond} now" if cond else "now",
             icon="weather",
+            why="Open-Meteo forecast for your coordinates, read at build "
+                "time. The bar runs between today's own forecast low and "
+                "high, not a fixed scale, so a spring morning is not "
+                "pinned to the bottom of the tile all year.",
             effect=self._summary(days),
             note="Source: Open-Meteo. Bars are daily highs on one scale; "
                  "blue figures are millimetres of rain.",

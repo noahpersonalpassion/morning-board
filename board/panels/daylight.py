@@ -98,6 +98,9 @@ class DaylightPanel:
             reading=_clock(t_set),
             unit="sunset",
             icon="sunset",
+            why="Computed astronomically from your latitude, not "
+                "observed — so it is exact, and it says nothing about "
+                "cloud. The bar runs from midwinter to midsummer.",
             flag=flag,
             flag_kind=kind,
             effect=effect,

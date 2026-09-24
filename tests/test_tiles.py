@@ -123,6 +123,89 @@ class TestTileMarkup(unittest.TestCase):
         self.assertIn("Needs your council zone.", html)
 
 
+class TestMethodDisclosure(unittest.TestCase):
+    """"Auditable" only means something if the rules are on the page."""
+
+    def method(self, rows):
+        from board.render import _method
+        return _method(rows)
+
+    def test_a_row_that_reported_nothing_is_still_listed(self):
+        """The rows a reader is most entitled to be suspicious of.
+
+        A panel that checked and found nothing and a panel that never ran
+        look identical from outside. The log is what separates them.
+        """
+        html = self.method([
+            ("Near you", PanelResult(state=State.QUIET, reading="Nothing",
+                                     why="Read 41 notices. None named a place "
+                                         "you gave this board.")),
+        ])
+        self.assertIn("Near you", html)
+        self.assertIn("Read 41 notices", html)
+
+    def test_rule_and_source_both_appear(self):
+        html = self.method([
+            ("Fuel", PanelResult(state=State.LIVE, reading="320",
+                                 why="Past 12 days this row would read "
+                                     "'source paused'.",
+                                 note="MBIE weekly monitoring.")),
+        ])
+        self.assertIn("source paused", html)
+        self.assertIn("MBIE weekly monitoring", html)
+
+    def test_nothing_to_explain_renders_nothing(self):
+        self.assertEqual(
+            self.method([("X", PanelResult(state=State.LIVE, reading="1"))]),
+            "")
+
+    def test_it_is_folded_away_by_default(self):
+        """On the page every morning, in the way on none of them."""
+        html = self.method([
+            ("Fuel", PanelResult(state=State.LIVE, reading="1", note="MBIE.")),
+        ])
+        self.assertTrue(html.startswith("<details"))
+        self.assertNotIn(" open>", html)
+
+
+class TestActionLinks(unittest.TestCase):
+    """Never a problem without a path out of it."""
+
+    def test_a_tile_renders_its_action(self):
+        html = _metric("Fuel", PanelResult(
+            state=State.LIVE, reading="320", icon="fuel",
+            link_label="Find cheaper nearby", link_url="https://example.test/"))
+        self.assertIn('class="act"', html)
+        self.assertIn('rel="noopener"', html)
+        self.assertIn("Find cheaper nearby", html)
+
+    def test_no_link_renders_no_affordance(self):
+        html = _metric("Fuel", PanelResult(state=State.LIVE, reading="320"))
+        self.assertNotIn('class="act"', html)
+
+    def test_a_half_specified_link_is_not_rendered(self):
+        """A label with no href is a button that does nothing."""
+        html = _metric("Fuel", PanelResult(state=State.LIVE, reading="320",
+                                           link_label="Go"))
+        self.assertNotIn('class="act"', html)
+
+    def test_a_story_links_to_the_version_shown(self):
+        from board.render import _country
+        html = _country(PanelResult(state=State.LIVE, reading="1", meta={
+            "stories": [{"title": "Mine expansion rejected", "where": "",
+                         "outlets": 2, "outlet_names": ["RNZ", "Stuff"],
+                         "url": "https://example.test/a"}]}))
+        self.assertIn('href="https://example.test/a"', html)
+
+    def test_a_story_without_a_url_is_still_shown(self):
+        from board.render import _country
+        html = _country(PanelResult(state=State.LIVE, reading="1", meta={
+            "stories": [{"title": "Mine expansion rejected", "where": "",
+                         "outlets": 2, "outlet_names": ["RNZ"]}]}))
+        self.assertIn("Mine expansion rejected", html)
+        self.assertNotIn("<a href", html)
+
+
 class TestPageAssembly(unittest.TestCase):
     def page(self, rows):
         country = PanelResult(state=State.LIVE, reading="0",

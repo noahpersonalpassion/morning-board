@@ -222,6 +222,14 @@
   }
   .method summary::marker, .method summary::-webkit-details-marker { color:var(--faint); }
   .method p { margin:0 0 6px; font-size:11.5px; line-height:1.55; color:var(--soft); }
+  .m-list { margin:2px 0 0; padding:0; display:flex; flex-direction:column; gap:9px; }
+  .m-row { display:flex; flex-direction:column; gap:2px; }
+  .m-list dt {
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9px;
+    letter-spacing:0.12em; text-transform:uppercase; color:var(--muted);
+  }
+  .m-list dd { margin:0; font-size:11.5px; line-height:1.5; color:var(--soft); }
+  .m-foot { margin:11px 0 4px !important; color:var(--faint) !important; }
 
   /* Visually hidden, still read aloud. Used where a chip carries a number
      whose meaning lives in an attribute a screen reader would skip. */
@@ -259,6 +267,7 @@
     <!--CARDS-->
     <!--GRID-->
     <!--STRIPS-->
+    <!--METHOD-->
 
     <section class="zone">
       <div class="zone-head">

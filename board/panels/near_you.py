@@ -61,6 +61,13 @@ class NearYouPanel:
                 icon="pin",
                 reading="Nothing",
                 note=note,
+                why=(
+                    f"Read {len(candidates)} notices published since the last "
+                    f"board. A notice reaches you only if it is published, "
+                    f"settled, consequential, and names your region, one of "
+                    f"your suburbs or one of your streets. None did. This row "
+                    f"says Nothing because it looked, not because it was off."
+                ),
                 meta={"checked": len(candidates)},
             )
 
@@ -71,6 +78,11 @@ class NearYouPanel:
             reading=str(len(local)),
             unit="change" if len(local) == 1 else "changes",
             note=f"{card.effect} {card.why_you}",
+            why=(
+                f"Read {len(candidates)} notices; {len(local)} named a place "
+                f"you gave this board. Shown here rather than under Elsewhere "
+                f"because no newsroom in the corpus reported it."
+            ),
             link_label="Open the notice",
             link_url=card.source_url,
             meta={"checked": len(candidates), "hits": len(local)},

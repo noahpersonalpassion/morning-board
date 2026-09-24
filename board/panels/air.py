@@ -76,6 +76,12 @@ class AirPanel:
             reading=f"{pm25:.0f}",
             unit="µg/m³ PM2.5",
             icon="air",
+            link_label="Your region's monitoring",
+            link_url="https://www.lawa.org.nz/explore-data/air-quality",
+            why=f"Measured this hour. The bands are the World Health "
+                f"Organization's 2021 guidelines — {WHO_ANNUAL:.0f} "
+                f"µg/m³ as an annual mean, {WHO_DAILY:.0f} over 24 "
+                f"hours — not this board's opinion of what is clean.",
             effect=effect,
             note=(
                 "Fine particulate, measured now. Source: Open-Meteo air "

@@ -119,6 +119,14 @@ class FuelPanel:
             reading=f"{value:.0f}",
             unit="c/L regular",
             icon="fuel",
+            link_label="Find cheaper nearby",
+            link_url="https://www.gaspy.nz/",
+            why=f"MBIE publishes weekly. This reading is {age} day"
+                f"{'s' if age != 1 else ''} old; past "
+                f"{STALE_AFTER_DAYS} days this row would read 'source "
+                f"paused' with its real date rather than show a stale "
+                f"price as current. The bar is the last {BAND_WEEKS} "
+                f"weeks of the same series.",
             effect=effect,
             note=note,
             scale=Scale(

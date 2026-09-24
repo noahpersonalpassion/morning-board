@@ -49,6 +49,9 @@ class DeadlinesPanel:
             return PanelResult(
                 state=State.QUIET,
                 icon="clock",
+                why="A deadline appears once it is inside its own "
+                    "warning window and disappears the day it passes. "
+                    "Nothing here is closing that you can reopen later.",
                 reading="None open",
                 note=(
                     "Nothing is closing that you cannot reopen later. "
@@ -76,6 +79,9 @@ class DeadlinesPanel:
         return PanelResult(
             state=State.URGENT,
             icon="clock",
+            why="Shown because it closes soon and cannot be reopened "
+                "afterwards. Deadlines you can miss and fix again are "
+                "deliberately not on this board.",
             reading=str(len(live)),
             unit="open",
             flag="cannot undo",

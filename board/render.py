@@ -178,9 +178,53 @@ def _country(r: PanelResult) -> str:
         seen = (f'<span class="seen" title="{html.escape(who, quote=True)}">'
                 f'{n}<span class="sr"> newsroom{"s" if n != 1 else ""}'
                 f'{": " + _esc(who) if who else ""}</span></span>') if n else ""
+        # The headline links to the version this board chose — the shortest
+        # in its cluster. A story you cannot open is a story you have to
+        # take on trust, which is the one thing this panel does not ask for.
+        title = _esc(s["title"])
+        if s.get("url"):
+            title = (f'<a href="{html.escape(s["url"], quote=True)}" '
+                     f'target="_blank" rel="noopener">{title}</a>')
         out.append(f'<li class="story">{seen}'
-                   f'<p>{_esc(s["title"])}{where}</p></li>')
+                   f'<p>{title}{where}</p></li>')
     return f'<ol class="country">{"".join(out)}</ol>'
+
+
+def _method(rows: list[tuple[str, PanelResult]]) -> str:
+    """Every row's source and the rule that put it there, in one place.
+
+    The board's claim has always been that it is auditable rather than
+    trustworthy, and until now that was true of the code and invisible on
+    the page — a reader could not tell a panel that checked and found
+    nothing from one that never ran.
+
+    It sits at the foot rather than inside each tile for two reasons. Eight
+    disclosure triangles scattered through a 2×2 grid is noise, and the
+    interesting question is never "why is the weather here" — it is "why
+    is Near You silent" and "why is that the fuel number", which are best
+    read together, as a log.
+
+    Rows that reported nothing are listed exactly like rows that did. They
+    are the ones a reader is most entitled to be suspicious of.
+    """
+    items = []
+    for label, r in rows:
+        parts = [p for p in (r.why, r.note) if p]
+        if not parts:
+            continue
+        items.append(
+            f'<div class="m-row"><dt>{_esc(label)}</dt>'
+            f'<dd>{_esc(" ".join(parts))}</dd></div>'
+        )
+    if not items:
+        return ""
+    return (
+        '<details class="method"><summary>Why each of these is here</summary>'
+        f'<dl class="m-list">{"".join(items)}</dl>'
+        '<p class="m-foot">Every rule above is a number or a test in the '
+        'source, not a judgement made this morning. If one of them looks '
+        'wrong to you, it is meant to be arguable.</p></details>'
+    )
 
 
 def _off_summary(off: list[tuple[str, PanelResult]]) -> str:
@@ -326,6 +370,7 @@ def render_page(
         .replace("<!--CARDS-->", cards_html)
         .replace("<!--GRID-->", grid_html)
         .replace("<!--STRIPS-->", strips_html)
+        .replace("<!--METHOD-->", _method(rows))
         .replace("<!--CHECKED-->", f"{len(on)} checked")
         .replace("<!--COUNTRYCAP-->",
                  f"{country.meta.get('cap', 5)} at most")
