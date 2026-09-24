@@ -5,7 +5,9 @@ from __future__ import annotations
 import json
 import sys
 import unittest
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -176,11 +178,87 @@ class TestFreshness(unittest.TestCase):
         self.assertIn("caches.delete", self.page())
 
 
+class TestNextReading(unittest.TestCase):
+    """The footer's "next" time must survive daylight saving.
+
+    GitHub's scheduler runs in UTC and does not observe New Zealand summer
+    time, so the workflow's fixed 18:00 UTC lands at 6am here in winter and
+    7am in summer. The footer used to print the literal string "06:00",
+    which meant a board whose whole argument is "never show a stale figure
+    as a current one" was quietly wrong about its own next reading for half
+    of every year.
+    """
+
+    def at(self, iso):
+        from board.render import next_reading
+        return next_reading(
+            datetime.fromisoformat(iso).replace(tzinfo=ZoneInfo("Pacific/Auckland")),
+            "Pacific/Auckland")
+
+    def test_standard_time_reads_six(self):
+        self.assertEqual(self.at("2026-09-24T17:36"), "6:00am")
+
+    def test_summer_time_reads_seven(self):
+        """New Zealand moves to NZDT on 27 September 2026."""
+        self.assertEqual(self.at("2026-09-30T17:36"), "7:00am")
+
+    def test_midwinter_reads_six(self):
+        self.assertEqual(self.at("2026-07-01T09:00"), "6:00am")
+
+    def test_after_the_fire_it_points_at_tomorrow(self):
+        """Read at 7am, the next reading is tomorrow's, not this morning's."""
+        self.assertEqual(self.at("2026-07-01T07:30"), "6:00am")
+
+
+class TestTerminalState(unittest.TestCase):
+    """The end of the board must not congratulate and then contradict."""
+
+    def page(self, rows):
+        country = PanelResult(state=State.LIVE, reading="0",
+                              meta={"stories": [], "cap": 5, "source": "T"})
+        return render_page(site_name="Board", place="Here", rows=rows,
+                           country=country)
+
+    def foot(self, rows):
+        return self.page(rows).split('<footer class="foot">')[1]
+
+    def test_an_open_deadline_is_not_caught_up(self):
+        """It read "You're caught up." directly above "1 thing needs you."
+
+        Both were true in their own way; together they were nonsense.
+        """
+        foot = self.foot([("Deadlines", PanelResult(state=State.URGENT,
+                                                    reading="1"))])
+        self.assertIn("One thing still needs you.", foot)
+        self.assertNotIn("caught up", foot)
+
+    def test_a_clear_board_says_so(self):
+        foot = self.foot([("Fuel", PanelResult(state=State.LIVE,
+                                               reading="320"))])
+        self.assertIn("caught up", foot)
+        self.assertIn("Nothing needs you today.", foot)
+
+    def test_an_unread_source_is_caught_up_with_gaps(self):
+        """Having seen everything readable is not the same as everything."""
+        foot = self.foot([("Fuel", PanelResult(state=State.UNREAD,
+                                               reading="Unread"))])
+        self.assertIn("with gaps", foot)
+        self.assertIn("could not be read", foot)
+
+    def test_plurals(self):
+        foot = self.foot([
+            ("A", PanelResult(state=State.URGENT, reading="1")),
+            ("B", PanelResult(state=State.URGENT, reading="1")),
+        ])
+        self.assertIn("2 things still need you.", foot)
+
+
 class TestAlertBar(unittest.TestCase):
     """The bar must be furniture on no morning and unmissable on one."""
 
-    def page(self, alert=None, weather_effect="Rain most days, from Friday"):
-        rows = [
+    def page(self, alert=None, weather_effect="Rain most days, from Friday",
+             rows=None):
+        rows = rows if rows is not None else [
             ("Weather", PanelResult(state=State.LIVE, reading="14.2C",
                                     effect=weather_effect,
                                     note="Source: Open-Meteo.")),
@@ -210,21 +288,34 @@ class TestAlertBar(unittest.TestCase):
         self.assertNotIn('class="alert"', self.page(alert=None))
 
     def test_firing_alert_appears_and_leads_the_page(self):
-        html = self.page(alert=self.firing())
+        html = self.page(alert=self.firing(), rows=[
+            ("Deadlines", PanelResult(state=State.URGENT, reading="1",
+                                      effect="Closes soon.")),
+        ])
         self.assertIn('class="alert"', html)
         self.assertIn("Taumarunui", html)
-        # and it outranks the weather in the lede
         lede = html.split('<p class="state">')[1].split("<span")[0]
-        self.assertLess(lede.index("M5.9"), lede.index("Rain"))
+        self.assertLess(lede.index("M5.9"), lede.index("deadline"))
 
-    def test_lede_takes_the_effect_not_the_note(self):
-        """The lede used to lift the weather note's first sentence, which
-        coupled the top line of the page to a provenance field. The day the
-        note began "Source: Open-Meteo", so did the lede."""
+    def test_lede_does_not_repeat_the_weather_tile(self):
+        """The top line answers "must I do anything", not "what is it like".
+
+        Opening the lede with the weather read well when the board was a
+        list. Once the weather got a tile of its own four centimetres below,
+        the same sentence appeared twice inside one glance — so the weather
+        stays in its tile and the lede carries what no tile can.
+        """
         html = self.page(weather_effect="Rain most days, from Friday")
         lede = html.split('<p class="state">')[1].split("<span")[0]
-        self.assertIn("Rain most days", lede)
+        self.assertNotIn("Rain most days", lede)
         self.assertNotIn("Source:", lede)
+
+    def test_lede_always_says_something(self):
+        html = self.page(rows=[("Fuel", PanelResult(state=State.LIVE,
+                                                    reading="320"))])
+        lede = html.split('<p class="state">')[1].split("<span")[0]
+        self.assertIn("1 reading taken", lede)
+        self.assertNotIn("1 readings", lede)
 
     def test_unread_alert_is_not_a_bar(self):
         """A failed alert feed must not render as a bar — and must not

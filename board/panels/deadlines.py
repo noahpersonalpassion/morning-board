@@ -77,7 +77,7 @@ class DeadlinesPanel:
             state=State.URGENT,
             icon="clock",
             reading=str(len(live)),
-            unit="open" if len(live) > 1 else "open",
+            unit="open",
             flag="cannot undo",
             flag_kind="alert",
             note=note,

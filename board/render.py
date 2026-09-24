@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import html
 import json
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -171,8 +171,13 @@ def _country(r: PanelResult) -> str:
                  if s.get("where") else "")
         n = int(s.get("outlets") or 0)
         who = ", ".join(s.get("outlet_names") or [])
+        # The bare number needs saying out loud. As a `title` alone it was
+        # invisible to a screen reader and unreachable on a touch screen,
+        # which is most of this board's readers — so the count that is the
+        # whole point of this panel was the one thing you could not get at.
         seen = (f'<span class="seen" title="{html.escape(who, quote=True)}">'
-                f'{n}</span>') if n else ""
+                f'{n}<span class="sr"> newsroom{"s" if n != 1 else ""}'
+                f'{": " + _esc(who) if who else ""}</span></span>') if n else ""
         out.append(f'<li class="story">{seen}'
                    f'<p>{_esc(s["title"])}{where}</p></li>')
     return f'<ol class="country">{"".join(out)}</ol>'
@@ -188,16 +193,44 @@ def _off_summary(off: list[tuple[str, PanelResult]]) -> str:
     """
     if not off:
         return ""
-    names = ", ".join(label for label, _ in off)
-    needs = "; ".join(f"{label} {_first_clause(r.note)}"
-                      for label, r in off if r.note)
+    # Each row named once, with what it needs. Listing the names and then
+    # repeating them inside the needs gave "Transport. Transport needs the
+    # AT feed." — a line that says one thing twice and reads as filler.
+    parts = []
+    for label, r in off:
+        clause = _first_clause(r.note)
+        parts.append(f"{label} {clause}" if clause else label)
     return (
         '<li class="strip" data-state="off">'
         f'<div class="ico">{glyph("blank")}</div>'
         '<div class="lbl">Not yet</div>'
-        f'<p class="strip-note">{_esc(names)}. {_esc(needs)}.</p>'
+        f'<p class="strip-note">{_esc("; ".join(parts))}.</p>'
         f'<span class="strip-read">{len(off)}</span></li>'
     )
+
+
+def next_reading(now: datetime, tz: str) -> str:
+    """When the build next runs, in the reader's own clock.
+
+    The footer used to say "next 06:00" as a literal string, which was true
+    only for the half of the year New Zealand is on standard time. GitHub's
+    scheduler runs in UTC and does not observe New Zealand daylight saving,
+    so the workflow's 18:00 UTC becomes 7am here from the last Sunday in
+    September — and a board whose entire argument is "never show a stale
+    figure as a current one" would have been quietly wrong about its own
+    next reading for six months of every year.
+
+    Converting the real cron time through the reader's zone is correct in
+    both halves of the year and needs no maintenance at the switch.
+    """
+    fires_utc = 18  # the workflow's cron: "0 18 * * *"
+    here = now.astimezone(timezone.utc)
+    nxt = here.replace(hour=fires_utc, minute=0, second=0, microsecond=0)
+    if nxt <= here:
+        nxt += timedelta(days=1)
+    local = nxt.astimezone(ZoneInfo(tz))
+    hour = local.hour % 12 or 12
+    return f"{hour}:{local.minute:02d}{'am' if local.hour < 12 else 'pm'}"
 
 
 def _first_clause(note: str) -> str:
@@ -236,33 +269,51 @@ def render_page(
     needs = [r for _, r in rows if r.needs_you]
     unread = [r for _, r in rows if r.state in (State.UNREAD, State.PAUSED)]
 
-    # The lede states the day in the reader's terms and never overclaims:
-    # it counts only what was actually read. Deliberately the `effect`, not
-    # the `note` — the note's job is provenance, and the day it began
-    # "Source: Open-Meteo", so did the lede.
+    # The lede answers one question: do I have to do anything? It used to
+    # open with the weather, which read well when the board was a list and
+    # became pure repetition once the weather got a tile of its own four
+    # centimetres below — the same sentence twice inside one glance. So the
+    # weather now lives in its tile, and the top line carries what a tile
+    # cannot: what needs you, what has not moved, and what went unread.
     bits = []
     if alert is not None and alert.state is State.URGENT:
         bits.append(f"<strong>{_esc(alert.reading)} earthquake overnight</strong>"
                     if alert.reading.startswith("M")
                     else f"<strong>{_esc(alert.reading)}</strong>")
-    weather = next((r for lbl, r in rows if lbl == "Weather"), None)
-    if weather and weather.state is State.LIVE and weather.effect:
-        bits.append(weather.effect.split(".")[0].rstrip("."))
     if needs:
         n = len(needs)
         bits.append(f"<strong>{n} deadline{'s' if n > 1 else ''} open</strong>")
     near = next((r for lbl, r in rows if lbl == "Near you"), None)
     if near and near.state is State.QUIET:
         bits.append("nothing has changed near your address")
-    lede = ". ".join(b[0].upper() + b[1:] for b in bits if b) + "." if bits else ""
-
-    foot_line = (
-        f"{len(needs)} thing{'s' if len(needs) != 1 else ''} needs you."
-        if needs else "Nothing needs you today."
-    )
     if unread:
-        foot_line += (f" {len(unread)} source"
-                      f"{'s' if len(unread) > 1 else ''} could not be read.")
+        n = len(unread)
+        bits.append(f"{n} source{'s' if n > 1 else ''} could not be read")
+    if not bits:
+        n = len(on)
+        bits.append(f"{n} reading{'s' if n != 1 else ''} taken, "
+                    f"nothing needs you")
+    lede = ". ".join(b[0].upper() + b[1:] for b in bits if b) + "."
+
+    # The end of the board must not congratulate and then contradict. The
+    # old footer read "You're caught up." and then, one line below, "1 thing
+    # needs you." Both were true in their own way and together they were
+    # nonsense: being caught up on the reading is not the same as having
+    # nothing left to do, and the page was asserting both at once.
+    if needs:
+        n = len(needs)
+        foot_head = ("One thing still needs you." if n == 1
+                     else f"{n} things still need you.")
+        foot_line = "Everything else on the board is read."
+    elif unread:
+        n = len(unread)
+        foot_head = "Caught up, with gaps."
+        foot_line = (f"{n} source{'s' if n > 1 else ''} could not be read this "
+                     f"morning, so {'it is' if n == 1 else 'they are'} shown "
+                     f"unread rather than guessed at.")
+    else:
+        foot_head = "You&rsquo;re caught up."
+        foot_line = "Nothing needs you today."
 
     shell = TEMPLATE.read_text(encoding="utf-8")
     return (
@@ -277,11 +328,13 @@ def render_page(
         .replace("<!--STRIPS-->", strips_html)
         .replace("<!--CHECKED-->", f"{len(on)} checked")
         .replace("<!--COUNTRYCAP-->",
-                 f"{country.meta.get('cap', 5)} &middot; hard cap")
+                 f"{country.meta.get('cap', 5)} at most")
         .replace("<!--COUNTRY-->", _country(country))
         .replace("<!--COUNTRYEFFECT-->", _esc(country.effect))
         .replace("<!--COUNTRYNOTE-->", _esc(country.note))
+        .replace("<!--FOOTHEAD-->", foot_head)
         .replace("<!--FOOT-->", _esc(foot_line))
+        .replace("<!--NEXT-->", _esc(next_reading(now, tz)))
         .replace("<!--BUILT-->", now.strftime("%-d %b %H:%M"))
         .replace("<!--PWAHEAD-->", pwa_head)
         .replace("<!--PWAREG-->", pwa_register)
@@ -321,7 +374,7 @@ def render_json(rows: list[tuple[str, PanelResult]],
         {
             "built": datetime.now(ZoneInfo("Pacific/Auckland")).isoformat(),
             "panels": [one(l, r) for l, r in rows],
-            "country": one("The country", country),
+            "country": one("Elsewhere", country),
             # Carried so the next build can tell a changed volcanic alert
             # level from a steady one. The board reads its own last output.
             "alert": one("Alert", alert) if alert is not None else None,

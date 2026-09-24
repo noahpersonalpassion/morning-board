@@ -182,7 +182,7 @@ class CountryPanel:
     source_name: str = "RNZ"
     cap: int = CAP
     panel_id: str = "country"
-    label: str = "The country"
+    label: str = "Elsewhere"
 
     def render(self) -> PanelResult:
         if self.corpus is not None and len(self.corpus.outlets_ok) >= MIN_OUTLETS_FOR_COUNTING:

@@ -137,7 +137,11 @@
   }
   .strip-note { margin:0; flex-grow:1; font-size:11.5px; line-height:1.35; color:var(--soft); }
   .strip-read { font-size:13px; font-weight:600; color:var(--muted); flex-shrink:0; }
-  .strip[data-state="off"] { opacity:0.72; }
+  /* Dimmed by colour, not opacity. Opacity multiplies against text that is
+     already muted, and 0.72 of --muted on --tile drops under the 4.5:1 the
+     rest of the page holds. A row that is quiet should be quiet, not
+     unreadable — least of all the row explaining what is not built yet. */
+  .strip[data-state="off"] .strip-read { color:var(--faint); font-weight:500; }
   .strip[data-state="unread"] .lbl, .strip[data-state="paused"] .lbl { color:var(--warn); }
   .strip[data-state="unread"] .ico, .strip[data-state="paused"] .ico { color:var(--warn); }
 
@@ -206,7 +210,25 @@
     margin-left:6px; white-space:nowrap;
   }
   .country-empty { margin:0; font-size:12.5px; line-height:1.45; color:var(--soft); }
-  .country-foot { font-size:11px; line-height:1.5; color:var(--faint); margin:0; padding-inline:2px; }
+  /* The method, folded away. It is the honest core of this panel and it was
+     four lines of defensive prose on every visit, which reads as a product
+     arguing with you. Behind a disclosure it is still one tap from anyone
+     who wants to check the working — and silent for everyone who does not. */
+  .method { padding-inline:2px; }
+  .method summary {
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9.5px;
+    letter-spacing:0.09em; text-transform:uppercase; color:var(--muted);
+    cursor:pointer; padding-block:7px; min-height:30px; display:flex; align-items:center;
+  }
+  .method summary::marker, .method summary::-webkit-details-marker { color:var(--faint); }
+  .method p { margin:0 0 6px; font-size:11.5px; line-height:1.55; color:var(--soft); }
+
+  /* Visually hidden, still read aloud. Used where a chip carries a number
+     whose meaning lives in an attribute a screen reader would skip. */
+  .sr {
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+  }
 
   .foot { display:flex; flex-direction:column; gap:5px; align-items:center; text-align:center; padding-block:16px 2px; }
   .foot h2 { margin:0; font-size:14.5px; font-weight:600; }
@@ -232,29 +254,32 @@
     <!--STALE-->
   </header>
 
-  <!--ALERT-->
-  <!--CARDS-->
-  <!--GRID-->
-  <!--STRIPS-->
+  <main class="board">
+    <!--ALERT-->
+    <!--CARDS-->
+    <!--GRID-->
+    <!--STRIPS-->
 
-  <section class="zone">
-    <div class="zone-head">
-      <h2>Elsewhere</h2>
-      <span class="cap"><!--COUNTRYCAP--></span>
-    </div>
-    <p class="country-lead"><!--COUNTRYEFFECT--></p>
-    <!--COUNTRY-->
-    <p class="country-foot">
-      <!--COUNTRYNOTE--> Everything above this is an instrument reading; this
-      is the one section written by people, which is why it is counted rather
-      than trusted.
-    </p>
-  </section>
+    <section class="zone">
+      <div class="zone-head">
+        <h2>Elsewhere</h2>
+        <span class="cap"><!--COUNTRYCAP--></span>
+      </div>
+      <p class="country-lead"><!--COUNTRYEFFECT--></p>
+      <!--COUNTRY-->
+      <details class="method">
+        <summary>How these five were chosen</summary>
+        <p><!--COUNTRYNOTE--> Everything above is an instrument reading. This
+        is the one section written by people, which is why it is counted
+        rather than trusted.</p>
+      </details>
+    </section>
+  </main>
 
   <footer class="foot">
-    <h2>You&rsquo;re caught up.</h2>
+    <h2><!--FOOTHEAD--></h2>
     <p><!--FOOT--></p>
-    <span class="mono"><!--CHECKED--> &middot; built <!--BUILT--> &middot; next 06:00</span>
+    <span class="mono"><!--CHECKED--> &middot; built <!--BUILT--> &middot; next <!--NEXT--></span>
   </footer>
 
 </div>
