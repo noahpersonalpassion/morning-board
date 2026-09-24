@@ -1,0 +1,67 @@
+name: Build the board
+
+# Free tier gives 2,000 Action minutes a month. This build takes about 30
+# seconds, so a daily run costs roughly 15 minutes a month.
+on:
+  schedule:
+    # 06:00 Pacific/Auckland. GitHub cron is UTC and does not observe NZDT,
+    # so this is NZST (UTC+12). It drifts to 07:00 over daylight saving,
+    # which is close enough for a morning board; two entries would send two
+    # builds for half the year.
+    - cron: "0 18 * * *"
+  workflow_dispatch: {}          # a button in the Actions tab
+  push:
+    branches: [main]
+    paths:
+      - "board/**"
+      - "notice/**"
+      - "build.py"
+      - ".github/workflows/build.yml"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two builds at once; never cancel a running one, because a
+# half-written page is worse than a slightly late one.
+concurrency:
+  group: board
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # No dependencies on purpose: the whole thing is standard library, so
+      # there is nothing to install, nothing to pin, and nothing to break in
+      # six months when you have forgotten this exists.
+      - name: Run the tests
+        run: python3 -m unittest discover -s tests
+
+      - name: Build
+        env:
+          NOTICE_GAZETTE_API_KEY: ${{ secrets.NOTICE_GAZETTE_API_KEY }}
+          NOTICE_GAZETTE_FEED_URL: ${{ secrets.NOTICE_GAZETTE_FEED_URL }}
+          NOTICE_LEGISLATION_API_KEY: ${{ secrets.NOTICE_LEGISLATION_API_KEY }}
+        run: python3 build.py
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

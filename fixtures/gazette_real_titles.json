@@ -1,0 +1,108 @@
+[
+  {
+    "comment": "REAL notice metadata captured from gazette.govt.nz on 23 Sep 2026, covering 15-23 Sep. Titles, notice numbers, types and dates are verbatim. Bodies are omitted deliberately: the card's plain-English effect comes from the template table, not from the notice text, so the pipeline must work without a body. Tags are recorded only where they were actually read off the notice page."
+  },
+  { "number": "2026-ln5366", "date": "2026-09-18",
+    "title": "Land (Subsurface) and a Restrictive Covenant Acquired for Railway Purposes—City Rail Link Project, 42 Upper Queen Street, Auckland Central",
+    "tags": ["Public Works Act", "Other Councils", "Auckland"] },
+
+  { "number": "2026-ln5367", "date": "2026-09-18",
+    "title": "Road to be Stopped—215 Taylors Mistake Road, Taylors Mistake, Christchurch City",
+    "tags": [] },
+
+  { "number": "2026-ln5476", "date": "2026-09-22",
+    "title": "Land Declared Road— Waikaretu Valley Road, Glen Murray, Onewhero , Waikato District",
+    "tags": [] },
+
+  { "number": "2026-ln5371", "date": "2026-09-18",
+    "title": "Land Acquired for a Pedestrian and Cycle Access Way and Declared Road—Frankley Road, Ferndale, New Plymouth",
+    "tags": [] },
+
+  { "number": "2026-ln5349", "date": "2026-09-18",
+    "title": "Easement Acquired for Roading Recovery Purposes—Wimbledon Road, Pōrangahau,  Central Hawke’s Bay District",
+    "tags": [] },
+
+  { "number": "2026-ln5420", "date": "2026-09-21",
+    "title": "Land Set Apart for Water Services Purposes—South Waikato District",
+    "tags": [] },
+
+  { "number": "2026-ln5365", "date": "2026-09-22",
+    "title": "Revocation of the Reservation Over a Reserve",
+    "tags": [] },
+
+  { "number": "2026-go5355", "date": "2026-09-18",
+    "title": "Notice of Appointment of a Commissioner for the Taieri Beach School (3840) Board",
+    "tags": [] },
+
+  { "number": "2026-go5373", "date": "2026-09-18",
+    "title": "Revocation of the Notice of Direction to Appoint a Limited Statutory Manager for the Mahana School (3201) Board",
+    "tags": [] },
+
+  { "number": "2026-go5331", "date": "2026-09-23",
+    "title": "Cancellation of Integration Agreement for St Joseph’s School, Orakei (1495)",
+    "tags": [] },
+
+  { "number": "2026-gs5462", "date": "2026-09-23",
+    "title": "Notice of Extension of Local Transition Period",
+    "tags": [] },
+
+  { "number": "2026-sl5374", "date": "2026-09-18",
+    "title": "Notification of Entry into Force of Emergency Management Rules",
+    "tags": [] },
+
+  { "number": "2026-sl5421", "date": "2026-09-21",
+    "title": "Notice Under the Social Security Act 2018",
+    "tags": [] },
+
+  { "number": "2026-sl5408", "date": "2026-09-21",
+    "title": "Fisheries ( Te Rāhui Kuku ki tua o Kanawa Temporary Closure) Notice 2026 (Notice No. MPI 2038)",
+    "tags": [] },
+
+  { "number": "2026-go5447", "date": "2026-09-22",
+    "title": "Funding Policy Statement in Relation to the Funding of ACC’s Levied Accounts",
+    "tags": ["Accident Compensation Act", "Funding policy statements", "Business, Innovation and Employment"] },
+
+  { "number": "2026-sl5464", "date": "2026-09-23",
+    "title": "Financial Markets Conduct (SuperLife Workplace Savings Scheme) Exemption Notice 2026",
+    "tags": [] },
+
+  { "number": "2026-gs5426", "date": "2026-09-23",
+    "title": "Sheepmeat and Beef Commodity Levies 2026–27",
+    "tags": [] },
+
+  { "number": "2026-sl4782", "date": "2026-09-21",
+    "title": "Levy on Pigs Slaughtered on Licensed Premises 2026/27",
+    "tags": [] },
+
+  { "number": "2026-sl5429", "date": "2026-09-21",
+    "title": "Renewal of Temporary Class Drug Order for Etomidate",
+    "tags": [] },
+
+  { "number": "2026-go5425", "date": "2026-09-21",
+    "title": "Amendment of Customs Airport Designation – Waikato Regional Airport",
+    "tags": [] },
+
+  { "number": "2026-sl5388", "date": "2026-09-18",
+    "title": "Amendment—Ministerial Exemptions Under the Anti-Money Laundering and Countering Financing of Terrorism Act 2009",
+    "tags": [] },
+
+  { "number": "2026-ln5298", "date": "2026-09-21",
+    "title": "Notice of Final Determinations to Assign Geographic Names",
+    "tags": [] },
+
+  { "number": "2026-go5361", "date": "2026-09-18",
+    "title": "Appointment of Chief Executive, Firearms Safety and Education",
+    "tags": [] },
+
+  { "number": "2026-gs5252", "date": "2026-09-22",
+    "title": "Annual Report of Industry Body—Gas Industry Company Limited 2026",
+    "tags": [] },
+
+  { "number": "2026-go5344", "date": "2026-09-18",
+    "title": "Amendment to the Terms of Reference of the Government Inquiry into the Fatal Landslides in Tauranga",
+    "tags": [] },
+
+  { "number": "2026-sl5340", "date": "2026-09-18",
+    "title": "Ngā Paearu Whai Raihana mō ngā Kōhanga Reo e hono ana ki Te Kōhanga Reo National Trust 2008 | Licensing Criteria for Kōhanga Reo affiliated with Te Kōhanga Reo National Trust 2008",
+    "tags": [] }
+]

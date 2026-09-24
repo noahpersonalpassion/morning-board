@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Road user charges to rise for diesel drivers from October",
+    "outlet": "Synthetic Wire",
+    "published": "2026-09-19T18:30:00+12:00",
+    "url": "https://example.invalid/news/ruc-rise"
+  },
+  {
+    "title": "Auckland Council signals rates rise in next annual plan",
+    "outlet": "Synthetic Wire",
+    "published": "2026-09-20T07:10:00+12:00",
+    "url": "https://example.invalid/news/council-rates"
+  },
+  {
+    "title": "Fuel prices stay volatile as Middle East conflict drags on",
+    "outlet": "Synthetic Post",
+    "published": "2026-09-21T06:45:00+12:00",
+    "url": "https://example.invalid/news/fuel-volatile"
+  },
+  {
+    "title": "Enrolment deadline looms with 440,000 still off the roll",
+    "outlet": "Synthetic Post",
+    "published": "2026-09-22T12:00:00+12:00",
+    "url": "https://example.invalid/news/enrolment"
+  }
+]

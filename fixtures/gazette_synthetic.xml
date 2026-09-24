@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SYNTHETIC TEST DATA. These are NOT real Gazette notices.
+
+  Every item below was invented to exercise the Delta Rule, using generic
+  entities ("Example Regional Council"). Replace this file with a saved
+  copy of the real feed once your API key arrives, and re-tune against
+  that. Do not quote anything in here as fact.
+
+  The mix is deliberate:
+    1  passes all four criteria (settled, consequential, unobvious)
+    2  fails CONSEQUENTIAL - real, binding, but lands on nobody in scope
+    3  fails SETTLED       - a proposal, not a commencement
+    4  fails UNOBVIOUS     - matches a planted headline in the corpus
+    5  passes              - a closing consultation window
+    6  fails CONSEQUENTIAL - routine appointment, no population effect
+-->
+<rss version="2.0">
+  <channel>
+    <title>New Zealand Gazette (synthetic fixture)</title>
+    <link>https://gazette.govt.nz/</link>
+    <description>Invented notices for testing the Delta Rule.</description>
+
+    <item>
+      <title>Water Services Charges Amendment Order 2026 commences 1 November 2026</title>
+      <link>https://example.invalid/notice/2026-sl1001</link>
+      <guid>synthetic-2026-sl1001</guid>
+      <pubDate>Mon, 21 Sep 2026 09:15:00 +1200</pubDate>
+      <category>Secondary Legislation</category>
+      <description>The Water Services Charges Amendment Order 2026 comes into force on 1 November 2026. It raises the fixed daily charge for metered residential connections in the Auckland region from 65 cents to 78 cents per day. Existing connections are not required to take any action.</description>
+    </item>
+
+    <item>
+      <title>Notice of appointment of a liquidator - Example Holdings Limited</title>
+      <link>https://example.invalid/notice/2026-al2210</link>
+      <guid>synthetic-2026-al2210</guid>
+      <pubDate>Mon, 21 Sep 2026 11:02:00 +1200</pubDate>
+      <category>Commercial</category>
+      <description>Notice is given that a liquidator was appointed to Example Holdings Limited on 18 September 2026. Creditors are required to submit claims by 30 October 2026.</description>
+    </item>
+
+    <item>
+      <title>Proposed amendment to the Example Fisheries Notice 2019 - submissions invited</title>
+      <link>https://example.invalid/notice/2026-gn3314</link>
+      <guid>synthetic-2026-gn3314</guid>
+      <pubDate>Tue, 22 Sep 2026 10:40:00 +1200</pubDate>
+      <category>General</category>
+      <description>The Ministry proposes amending the Example Fisheries Notice 2019. No decision has been made. Submissions on the proposal may be made in writing.</description>
+    </item>
+
+    <item>
+      <title>Road user charges rates increase confirmed for 1 October 2026</title>
+      <link>https://example.invalid/notice/2026-tr4102</link>
+      <guid>synthetic-2026-tr4102</guid>
+      <pubDate>Tue, 22 Sep 2026 14:20:00 +1200</pubDate>
+      <category>Transport</category>
+      <description>Road user charges rates increase from 1 October 2026 for all diesel vehicles under 3.5 tonnes. The rate rises from $76 to $82 per 1000 kilometres.</description>
+    </item>
+
+    <item>
+      <title>Example Regional Council land drainage rate - consultation closes 12 October 2026</title>
+      <link>https://example.invalid/notice/2026-ln5507</link>
+      <guid>synthetic-2026-ln5507</guid>
+      <pubDate>Wed, 23 Sep 2026 08:05:00 +1200</pubDate>
+      <category>Land</category>
+      <description>Example Regional Council gives notice that submissions on the proposed land drainage targeted rate close at 5pm on 12 October 2026. The rate would apply to rating units in the Auckland region within the scheme boundary. Submissions received after that time cannot be considered.</description>
+    </item>
+
+    <item>
+      <title>Appointment of members to the Example Advisory Committee</title>
+      <link>https://example.invalid/notice/2026-ap6620</link>
+      <guid>synthetic-2026-ap6620</guid>
+      <pubDate>Wed, 23 Sep 2026 09:30:00 +1200</pubDate>
+      <category>Appointments</category>
+      <description>The Minister has appointed three members to the Example Advisory Committee for a term of three years commencing 1 October 2026.</description>
+    </item>
+
+  </channel>
+</rss>

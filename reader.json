@@ -1,0 +1,46 @@
+{
+  "_comment": [
+    "This is the only file you need to edit to make the board yours.",
+    "It is committed to the repo and contains nothing secret. API keys live",
+    "in the environment, never here.",
+    "",
+    "Nothing in it is looked up against a database. The strings you write are",
+    "matched directly against the text of official notices, which is why it",
+    "works anywhere in New Zealand without anyone compiling a suburb list."
+  ],
+
+  "name": "Morning Board",
+  "place": "Onehunga",
+
+  "_latlon": "Used only for the weather. Right-click a point in any map app.",
+  "lat": -36.9333,
+  "lon": 174.7833,
+
+  "_region": "One of: northland auckland waikato 'bay of plenty' gisborne \"hawke's bay\" taranaki manawatu-whanganui wellington tasman nelson marlborough 'west coast' canterbury otago southland 'chatham islands'",
+  "region": "auckland",
+
+  "_suburbs": "Yours, plus the ones you border. A road stopped one suburb over still changes how you drive to work.",
+  "suburbs": [
+    "Onehunga",
+    "Royal Oak",
+    "Penrose",
+    "Hillsborough",
+    "Mount Roskill",
+    "Ellerslie",
+    "Greenlane"
+  ],
+
+  "_streets": "Exact street names. These produce the sharpest cards: 'on X, where you live'.",
+  "streets": [
+    "Gerrard Besson Place"
+  ],
+
+  "_proximity_floor": "How close a place-specific notice must be to reach you. REGION = every land notice in your city (about 2.2 a week). SUBURB = your suburb and neighbours (0.8). STREET = your street only (0.5). National changes ignore this entirely.",
+  "proximity_floor": "SUBURB",
+
+  "_attributes": "Things true of you that gate occupational notices. Without 'pig_farmer' you never see pig levy changes. Known: household, diesel_vehicle, sheep_beef_farmer, pig_farmer, managed_fund_member, young_children",
+  "attributes": [
+    "household",
+    "diesel_vehicle"
+  ]
+}

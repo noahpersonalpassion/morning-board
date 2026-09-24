@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title><!--TITLE--></title>
+<meta name="description" content="What changed near you, what closes soon, and what everyone is talking about. Read it in twenty seconds.">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!--PWAHEAD-->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --ground:#EFF2F0; --surface:#FFFFFF; --ink:#121714; --muted:#5B635D;
+    --rule:#D8DED9; --rule-soft:#E7EBE8; --accent:#14564B; --ok:#2F6B4F;
+    --warn:#8A5A00; --warn-bg:#F6EEDA; --alert:#A32A1C; --alert-bg:#F8E8E4;
+    --off:#9AA39C; --bar:#BAC7C2; --rain:#2C5F8A;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground:#0E1210; --surface:#151A17; --ink:#E8EDE9; --muted:#98A199;
+      --rule:#273128; --rule-soft:#1E2620; --accent:#5FC9B4; --ok:#6FBF92;
+      --warn:#DDB264; --warn-bg:#2A2318; --alert:#E8897A; --alert-bg:#2C1B18;
+      --off:#666F68; --bar:#3A4842; --rain:#7FB3DD;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground:#0E1210; --surface:#151A17; --ink:#E8EDE9; --muted:#98A199;
+    --rule:#273128; --rule-soft:#1E2620; --accent:#5FC9B4; --ok:#6FBF92;
+    --warn:#DDB264; --warn-bg:#2A2318; --alert:#E8897A; --alert-bg:#2C1B18;
+    --off:#666F68; --bar:#3A4842; --rain:#7FB3DD;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:'Archivo', system-ui, sans-serif; -webkit-font-smoothing:antialiased;
+  }
+  img { max-width: 100%; }
+  .wrap {
+    max-width:560px; margin:0 auto; padding-inline:18px; padding-block:34px 26px;
+    display:flex; flex-direction:column; gap:24px;
+  }
+  .top { display:flex; flex-direction:column; gap:10px; }
+  .stamp { display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  h1 { margin:0; font-size:25px; font-weight:700; letter-spacing:-0.02em; }
+  .place {
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:11px;
+    letter-spacing:0.09em; color:var(--muted); text-transform:uppercase;
+  }
+  .state { margin:0; font-size:14.5px; line-height:1.5; color:var(--muted); max-width:46ch; }
+  .state strong { color:var(--ink); font-weight:600; }
+
+  .zone { display:flex; flex-direction:column; gap:9px; }
+  .zone-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding-inline:2px; }
+  .zone-head h2 {
+    margin:0; font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:10.5px;
+    font-weight:500; letter-spacing:0.13em; text-transform:uppercase; color:var(--muted);
+  }
+  .zone-head .cap {
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:10px;
+    letter-spacing:0.06em; color:var(--off);
+  }
+
+  .board { list-style:none; margin:0; padding:0; background:var(--surface); border-block:1px solid var(--rule); }
+  .row {
+    display:grid; grid-template-columns:9px 84px 1fr; align-items:baseline;
+    column-gap:13px; row-gap:5px; padding:15px 15px 15px 13px;
+    border-top:1px solid var(--rule-soft);
+  }
+  .row:first-child { border-top:0; }
+  .mark { width:9px; height:9px; border-radius:2px; background:var(--ok); align-self:center; grid-row:1 / span 2; }
+  .row[data-state="quiet"]  .mark { background:transparent; box-shadow:inset 0 0 0 1.5px var(--off); }
+  .row[data-state="paused"] .mark { background:var(--warn); }
+  .row[data-state="unread"] .mark { background:var(--warn); }
+  .row[data-state="urgent"] .mark { background:var(--alert); }
+  .row[data-state="off"]    .mark { background:transparent; box-shadow:inset 0 0 0 1.5px var(--rule); }
+  .label {
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:10.5px;
+    letter-spacing:0.1em; text-transform:uppercase; color:var(--muted);
+    align-self:center; grid-row:1 / span 2;
+  }
+  .read { font-size:19px; font-weight:600; letter-spacing:-0.01em; line-height:1.25; font-variant-numeric:tabular-nums; }
+  .read .unit { font-weight:500; color:var(--muted); font-size:15px; }
+  .note { grid-column:3; font-size:13px; line-height:1.45; color:var(--muted); }
+  .note a { color:var(--accent); text-underline-offset:3px; }
+  .row[data-state="off"] .read { color:var(--off); font-weight:500; }
+  .flag {
+    display:inline-block; font-family:'IBM Plex Mono', ui-monospace, monospace;
+    font-size:9.5px; letter-spacing:0.08em; text-transform:uppercase;
+    padding:2.5px 6px; border-radius:3px; vertical-align:1.5px; margin-left:7px; font-weight:500;
+  }
+  .flag.warn { background:var(--warn-bg); color:var(--warn); }
+  .flag.alert { background:var(--alert-bg); color:var(--alert); }
+
+  .week { grid-column:3; margin-top:4px; }
+  .week svg { display:block; width:100%; height:auto; max-width:100%; }
+  .wk-high { font:500 10px 'IBM Plex Mono', monospace; fill:var(--muted); }
+  .wk-high.now { fill:var(--ink); }
+  .wk-day { font:400 10px 'IBM Plex Mono', monospace; fill:var(--off); letter-spacing:.06em; }
+  .wk-day.now { fill:var(--ink); font-weight:500; }
+  .wk-rain { font:500 10px 'IBM Plex Mono', monospace; fill:var(--rain); }
+
+  .country { list-style:none; margin:0; padding:0; }
+  .story {
+    display:grid; grid-template-columns:17px 1fr; column-gap:11px;
+    padding-block:10px; border-top:1px solid var(--rule-soft); align-items:baseline;
+  }
+  .story:first-child { border-top:0; padding-top:2px; }
+  .story .n { font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:10.5px; color:var(--off); font-variant-numeric:tabular-nums; }
+  .story p { margin:0; font-size:14.5px; line-height:1.4; }
+  .story .where {
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9.5px;
+    letter-spacing:0.08em; text-transform:uppercase; color:var(--accent);
+    margin-left:6px; white-space:nowrap;
+  }
+  .country-foot { font-size:12.5px; line-height:1.5; color:var(--muted); padding-top:12px; margin:0; border-top:1px solid var(--rule); }
+
+  .foot { display:flex; flex-direction:column; gap:7px; align-items:center; text-align:center; padding-block:14px 4px; }
+  .foot h2 { margin:0; font-size:15px; font-weight:600; }
+  .foot p { margin:0; font-size:12.5px; line-height:1.5; color:var(--muted); max-width:36ch; }
+  .foot .next {
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:10px;
+    letter-spacing:0.09em; text-transform:uppercase; color:var(--muted); margin-top:5px;
+  }
+  a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+
+  @media (max-width:400px) {
+    .row { grid-template-columns:9px 1fr; }
+    .label { grid-row:1; grid-column:2; align-self:baseline; }
+    .read, .note, .week { grid-column:2; }
+    .mark { grid-row:1 / span 4; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="stamp">
+      <h1><!--TITLE--></h1>
+      <span class="place"><!--STAMP--></span>
+    </div>
+    <p class="state"><!--LEDE--></p>
+  </header>
+
+  <section class="zone">
+    <div class="zone-head">
+      <h2>Your morning</h2>
+      <span class="cap"><!--CHECKED--></span>
+    </div>
+    <ol class="board"><!--PANELS--></ol>
+  </section>
+
+  <section class="zone">
+    <div class="zone-head">
+      <h2>The country</h2>
+      <span class="cap"><!--COUNTRYCAP--></span>
+    </div>
+    <!--COUNTRY-->
+    <p class="country-foot">
+      Five is the cap, not today&rsquo;s count. This is here so you are not
+      blindsided, not so you are informed &mdash; and it is the one part of the
+      board that gets shorter as the day goes on, never longer.
+      Source: <!--COUNTRYSOURCE-->.
+    </p>
+  </section>
+
+  <footer class="foot">
+    <h2>That&rsquo;s the board.</h2>
+    <p><!--FOOT--></p>
+    <span class="next">Built <!--BUILT--> &middot; next read 06:00</span>
+  </footer>
+
+</div>
+<!--PWAREG-->
+</body>
+</html>
